@@ -14,7 +14,7 @@
   h1 { font-family: var(--f-head); font-size: 44px; font-weight: 400; }
   header p { font-family: var(--f-mono); color: var(--muted); letter-spacing: .1em; font-size: 14px; }
   h2 { font-family: var(--f-mono); color: var(--acc); font-size: 15px; letter-spacing: .3em; font-weight: 400; margin: 40px 0 16px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 20px; }
   .card { background: var(--bg2); border: 1px solid var(--line); }
   .thumb { position: relative; aspect-ratio: 16/9; overflow: hidden;
     background: #2a2f33 repeating-conic-gradient(#30363b 0 25%, #262b2f 0 50%) 0 0 / 20px 20px; }
