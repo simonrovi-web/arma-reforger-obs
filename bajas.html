@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Bajas — Contador y KIA</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  CONTADOR DE BAJAS + PANTALLA "K.I.A." cuando te abaten.
+  Muestra bajas, muertes, K/D y racha. Avisos de racha: doble, triple, imparable...
+
+  CONTROL EN DIRECTO (elige uno):
+    · Panel control.html como dock de OBS (Docks → Docks de navegador personalizados)
+    · Clic derecho en la fuente → "Interactuar":
+        clic en BAJAS = +1 · clic derecho en BAJAS = −1 · clic en MUERTES = te abaten (KIA)
+  Los datos se guardan aunque refresques la fuente o reinicies OBS.
+
+  ?pos=br (abajo-der, por defecto) | bl | tr | tl
+  ?kia=0        desactiva la pantalla KIA
+  ?kiadur=4     segundos de la pantalla KIA
+-->
+<style>
+  .kc { position: absolute; display: flex; flex-direction: column; align-items: flex-end; user-select: none;
+    opacity: 0; animation: kin .6s .2s cubic-bezier(.2,.8,.2,1) forwards; }
+  .kc.br { right: 44px; bottom: 110px; } .kc.tr { right: 44px; top: 170px; }
+  .kc.bl { left: 44px; bottom: 110px; align-items: flex-start; } .kc.tl { left: 44px; top: 170px; align-items: flex-start; }
+  @keyframes kin { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: none } }
+
+  .panel { display: flex; background: rgba(10,13,9,.9); border: 1px solid var(--line); border-top: 3px solid var(--acc);
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,.5)); }
+  .cell { padding: 10px 18px 12px; min-width: 96px; text-align: center; border-right: 1px solid var(--line); cursor: pointer; position: relative; }
+  .cell:last-child { border-right: 0; }
+  .cell b { display: block; font-family: var(--f-mono); font-weight: 400; font-size: 46px; line-height: 1; }
+  .cell span { font-family: var(--f-mono); font-size: 14px; color: var(--muted); letter-spacing: .2em; }
+  .cell.k { min-width: 130px; background: color-mix(in srgb, var(--acc) 10%, transparent); }
+  .cell.k b { color: var(--acc); font-size: 58px; }
+  .cell.d b { color: #ff9b8e; }
+  .cell.r b { color: var(--txt); }
+  .cell.r.hot b { color: var(--acc); text-shadow: 0 0 14px var(--acc); }
+  .bump { animation: bump .45s; } @keyframes bump { 40% { transform: scale(1.35); filter: brightness(1.8) } }
+
+  .feed { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; align-items: inherit; min-height: 0; }
+  .chip { display: flex; align-items: center; gap: 10px; padding: 6px 16px 6px 12px; background: rgba(10,13,9,.92); border-left: 4px solid var(--acc);
+    font-family: var(--f-head); font-size: 24px; text-transform: uppercase; animation: chip 2.6s forwards; white-space: nowrap; }
+  .chip small { font-family: var(--f-mono); font-size: 15px; color: var(--khaki); letter-spacing: .15em; }
+  .chip.streak { background: var(--acc); color: var(--on-acc); border-left-color: var(--gold); font-size: 30px; }
+  .chip.streak small { color: var(--on-acc); }
+  .chip.minus { border-left-color: var(--muted); color: var(--muted); }
+  @keyframes chip { 0% { opacity: 0; transform: translateX(40px) } 10%, 80% { opacity: 1; transform: none } 100% { opacity: 0; transform: translateY(-10px) } }
+
+  /* Pantalla KIA */
+  .kia { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; }
+  .kia::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(90,0,0,.15) 30%, rgba(60,0,0,.85) 100%); }
+  .kia .in { position: relative; text-align: center; }
+  .kia h1 { font-family: var(--f-head); font-size: 220px; line-height: 1; color: var(--red); letter-spacing: .08em; text-shadow: 0 0 40px rgba(224,64,44,.6); }
+  .kia .l { font-family: var(--f-mono); font-size: 34px; letter-spacing: .5em; color: var(--txt); margin-top: 6px; }
+  .kia .s { display: inline-flex; gap: 30px; margin-top: 30px; padding: 10px 30px; border: 1px solid rgba(224,64,44,.6); font-family: var(--f-mono); font-size: 24px; color: #ffb4aa; letter-spacing: .2em; background: rgba(0,0,0,.5); }
+  .kia .bar { width: 600px; height: 6px; margin: 26px auto 0; background: rgba(255,255,255,.12); }
+  .kia .bar i { display: block; height: 100%; width: 0; background: var(--red); }
+  .kia.on { animation: kiaIn .25s forwards; }
+  .kia.on h1 { animation: shake .5s; }
+  .kia.on .bar i { animation: fillbar var(--kd, 4s) linear forwards; }
+  .kia.off { animation: kiaOut .6s forwards; }
+  @keyframes kiaIn { 0% { opacity: 0; filter: brightness(3) } 100% { opacity: 1; filter: none } }
+  @keyframes kiaOut { from { opacity: 1 } to { opacity: 0 } }
+  @keyframes fillbar { to { width: 100% } }
+  @keyframes shake { 0%, 100% { transform: none } 20% { transform: translate(-12px, 4px) } 40% { transform: translate(10px, -6px) } 60% { transform: translate(-6px, 2px) } 80% { transform: translate(4px, 0) } }
+  .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  .flash.go { animation: fl .4s; } @keyframes fl { 0% { opacity: .5 } 100% { opacity: 0 } }
+</style>
+</head>
+<body>
+<div class="kia" id="kia">
+  <div class="in">
+    <h1>K.I.A.</h1>
+    <div class="l">УБИТ В БОЮ</div><div class="ru" style="font-size:22px;margin-top:8px">ABATIDO EN COMBATE</div>
+    <div class="s"><span>BAJAS <b id="kk">0</b></span><span>K/D <b id="kkd">0.00</b></span><span>MEJOR RACHA <b id="kb">0</b></span></div>
+    <div class="bar"><i></i></div>
+  </div>
+</div>
+<div class="flash" id="flash"></div>
+
+<div class="kc" id="kc">
+  <div class="feed" id="feed"></div>
+  <div class="panel">
+    <div class="cell k" id="ck"><b id="k">0</b><span>BAJAS · УБИТО</span></div>
+    <div class="cell d" id="cd"><b id="d">0</b><span>MUERTES</span></div>
+    <div class="cell" id="ckd"><b id="kd">0.00</b><span>K/D</span></div>
+    <div class="cell r" id="cr"><b id="r">0</b><span>RACHA</span></div>
+  </div>
+</div>
+
+<script>
+  const KEY = 'ar-bajas';
+  const STREAK = { 2: 'DOBLE BAJA', 3: 'TRIPLE BAJA', 5: 'RACHA IMPARABLE', 7: 'MÁQUINA DE GUERRA', 10: 'LEYENDA DE EVERON' };
+  const $ = id => document.getElementById(id);
+  let S = store.get(KEY, { k: 0, d: 0, r: 0, best: 0 });
+  $('kc').classList.add(P('pos', 'br'));
+  $('kia').style.setProperty('--kd', PN('kiadur', 4) + 's');
+
+  const kd = () => (S.d ? S.k / S.d : S.k).toFixed(2);
+  function render() {
+    $('k').textContent = S.k; $('d').textContent = S.d; $('kd').textContent = kd(); $('r').textContent = S.r;
+    $('cr').classList.toggle('hot', S.r >= 3);
+  }
+  const bump = id => { const e = $(id); e.classList.remove('bump'); void e.offsetWidth; e.classList.add('bump'); };
+  function chip(html, cls = '') {
+    const c = document.createElement('div'); c.className = 'chip ' + cls; c.innerHTML = html; $('feed').prepend(c);
+    setTimeout(() => c.remove(), 2700);
+    while ($('feed').children.length > 3) $('feed').lastChild.remove();
+  }
+
+  // Reproduce la animación de un evento (el estado ya está guardado)
+  let kiaT;
+  function play(ev) {
+    S = store.get(KEY, S); render();
+    if (ev === 'kill') {
+      bump('ck'); bump('cr');
+      chip(`+1 BAJA <small>${clockStr()}</small>`);
+      const r = S.r;
+      if (STREAK[r]) setTimeout(() => chip(`${STREAK[r]} <small>×${r}</small>`, 'streak'), 250);
+    } else if (ev === 'undo') {
+      bump('ck'); chip('−1 BAJA <small>CORREGIDO</small>', 'minus');
+    } else if (ev === 'death') {
+      bump('cd');
+      if (P('kia', '1') === '0') return;
+      $('kk').textContent = S.k; $('kkd').textContent = kd(); $('kb').textContent = S.best;
+      const k = $('kia'); clearTimeout(kiaT); k.className = 'kia'; void k.offsetWidth; k.classList.add('on');
+      const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+      kiaT = setTimeout(() => k.className = 'kia off', PN('kiadur', 4) * 1000);
+    }
+  }
+
+  // Aplica una acción, la guarda y avisa al resto de fuentes
+  window.act = function (ev) {
+    S = store.get(KEY, S);
+    if (ev === 'kill') { S.k++; S.r++; S.best = Math.max(S.best, S.r); }
+    if (ev === 'undo') { S.k = Math.max(0, S.k - 1); S.r = Math.max(0, S.r - 1); }
+    if (ev === 'death') { S.d++; S.r = 0; }
+    if (ev === 'reset') S = { k: 0, d: 0, r: 0, best: 0 };
+    store.set(KEY, S); bus.send({ t: 'bajas', ev }); play(ev);
+  };
+
+  $('ck').addEventListener('click', () => act('kill'));
+  $('ck').addEventListener('contextmenu', e => { e.preventDefault(); act('undo'); });
+  $('cd').addEventListener('click', () => act('death'));
+  bus.on(m => { if (m.t === 'bajas') play(m.ev); });
+  render();
+</script>
+</body>
+</html>

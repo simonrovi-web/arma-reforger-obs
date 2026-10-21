@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PiP — Marco de cámara</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  PICTURE IN PICTURE — marco con centro transparente.
+  Coloca tu webcam (o una 2ª captura del juego) DEBAJO de esta fuente en OBS,
+  ajustada al hueco. Todo en píxeles de un lienzo 1920x1080.
+
+  ?x=1380&y=700&w=480&h=300     posición y tamaño del hueco
+  ?label=CAM // OPERADOR        texto de la pestaña
+  ?modo=casco                   efecto "cámara de casco" (viñeta + líneas)
+  ?layout=dual                  dos ventanas grandes lado a lado (vista dividida)
+-->
+<style>
+  .win { position: absolute; }
+  .win .frame { position: absolute; inset: -8px; border: 1px solid var(--line); }
+  .win .brackets { inset: -14px; --b: 40px; --t: 4px; }
+  .win .tab { position: absolute; left: -14px; top: -58px; height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 16px;
+    background: var(--acc); color: var(--on-acc); font-family: var(--f-mono); font-size: 20px; letter-spacing: .15em;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); padding-right: 30px; }
+  .win .tab .dot { width: 10px; height: 10px; background: var(--on-acc); box-shadow: none; }
+  .win .hud { position: absolute; left: 14px; right: 14px; bottom: 10px; display: flex; justify-content: space-between;
+    font-family: var(--f-mono); font-size: 16px; color: #fff; text-shadow: 0 1px 3px #000; letter-spacing: .1em; }
+  .win .cross { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px; opacity: .45;
+    background: linear-gradient(#fff,#fff) center/2px 100% no-repeat, linear-gradient(#fff,#fff) center/100% 2px no-repeat; }
+  .win .fx { position: absolute; inset: 0; overflow: hidden; }
+  .casco .fx { background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.7) 100%); }
+  .casco .fx::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 1px, transparent 1px 3px); }
+  .win { opacity: 0; animation: pop .6s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes pop { from { opacity: 0; transform: scale(.94) } to { opacity: 1; transform: none } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  const casco = P('modo', '') === 'casco';
+  function win(x, y, w, h, label, delay = 0) {
+    return `<div class="win${casco ? ' casco' : ''}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;animation-delay:${delay}s">
+      <div class="fx"></div><div class="frame"></div><div class="brackets"><i></i></div>
+      ${casco ? '<div class="cross"></div>' : ''}
+      <div class="tab"><i class="dot"></i>${label}</div>
+      <div class="hud"><span>REC <b class="ck"></b></span><span>${casco ? 'НАШЛЕМНАЯ КАМ.' : 'КАНАЛ 01'}</span></div></div>`;
+  }
+  const root = document.getElementById('root');
+  if (P('layout', '') === 'dual') {
+    root.innerHTML = win(80, 230, 860, 484, P('label', 'JUGADOR 1'), 0) + win(980, 230, 860, 484, P('label2', 'JUGADOR 2'), .15);
+  } else {
+    root.innerHTML = win(PN('x', 1380), PN('y', 700), PN('w', 480), PN('h', 300), P('label', 'КАМЕРА // OPERADOR'));
+  }
+  const u = () => document.querySelectorAll('.ck').forEach(e => e.textContent = clockStr()); u(); setInterval(u, 1000);
+</script>
+</body>
+</html>

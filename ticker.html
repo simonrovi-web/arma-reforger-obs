@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ticker — SITREP</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  TICKER / FALDÓN — barra inferior con mensajes en movimiento
+  ?msg=Mensaje 1|Mensaje 2|Mensaje 3   (si no, usa "ticker" de config.js)
+  ?vel=40     segundos por vuelta (más alto = más lento)
+  ?pos=abajo | arriba
+-->
+<style>
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 56px; display: flex; background: rgba(10,13,9,.92); border-top: 1px solid var(--line);
+    transform: translateY(100%); animation: up .6s .2s cubic-bezier(.2,.8,.2,1) forwards; }
+  .bar.arriba { bottom: auto; top: 0; border-top: 0; border-bottom: 1px solid var(--line); transform: translateY(-100%); }
+  @keyframes up { to { transform: none } }
+  .lbl { flex: none; display: flex; align-items: center; gap: 12px; padding: 0 28px; background: var(--acc); color: var(--on-acc);
+    font-family: var(--f-head); font-size: 26px; clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%); padding-right: 44px; }
+  .lbl .dot { width: 10px; height: 10px; background: var(--on-acc); box-shadow: none; }
+  .track { flex: 1; overflow: hidden; display: flex; align-items: center; -webkit-mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+  .crawl { font-family: var(--f-mono); font-size: 24px; letter-spacing: .12em; color: var(--txt); }
+  .crawl i { color: var(--acc); font-style: normal; margin: 0 26px; }
+  .clk { flex: none; display: flex; align-items: center; padding: 0 28px; font-family: var(--f-mono); font-size: 24px; color: var(--acc); border-left: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="bar" id="bar">
+  <div class="lbl"><i class="star gold"></i>СВОДКА</div>
+  <div class="track"><div class="crawl" id="cr"></div></div>
+  <div class="clk" id="clk"></div>
+</div>
+<script>
+  if (P('pos', 'abajo') === 'arriba') document.getElementById('bar').classList.add('arriba');
+  const msgs = PL('msg', PL('ticker', []));
+  const html = msgs.map(m => `<span>${m.toUpperCase()}</span><i>◆</i>`).join('');
+  const cr = document.getElementById('cr'); cr.innerHTML = html + html;
+  cr.style.setProperty('--speed', PN('vel', 40) + 's');
+  const ck = document.getElementById('clk'); const u = () => ck.textContent = clockStr(false) + ' HRS'; u(); setInterval(u, 1000);
+</script>
+</body>
+</html>

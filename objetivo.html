@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Objetivo — Pop-up y tracker</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  POP-UP DE OBJETIVO — aparece grande arriba al centro y luego se queda
+  pequeño en la esquina superior izquierda como "tracker" de misión.
+
+  Por URL (se lanza al cargar / al activar la escena):
+    ?obj=Capturar Saint-Philippe&sub=Base de suministros&grid=047-112&letra=B
+    ?estado=nuevo | cumplido | fallido
+    ?dur=5        segundos del pop-up grande
+    ?fijar=0      no dejar el tracker en la esquina
+  En directo: desde el panel control.html (dock de OBS).
+-->
+<style>
+  .pop { position: absolute; left: 0; right: 0; top: 130px; display: flex; flex-direction: column; align-items: center; text-align: center; pointer-events: none; }
+  .pop .mk { width: 120px; height: 120px; display: grid; place-items: center; position: relative; transform: scale(0); }
+  .pop .mk svg { position: absolute; inset: 0; }
+  .pop .mk b { font-family: var(--f-head); font-weight: 400; font-size: 54px; color: var(--c); position: relative; }
+  .pop .hd { margin-top: 18px; display: flex; align-items: center; gap: 22px; }
+  .pop .hd i { height: 2px; width: 0; background: var(--c); }
+  .pop .hd span { font-family: var(--f-mono); font-size: 26px; letter-spacing: .45em; color: var(--c); opacity: 0; padding-left: .45em; }
+  .pop h1 { font-family: var(--f-head); font-weight: 400; font-size: 84px; line-height: 1.05; margin-top: 10px; text-transform: uppercase;
+    text-shadow: 0 4px 20px rgba(0,0,0,.8); clip-path: inset(0 50% 0 50%); }
+  .pop .sub { margin-top: 10px; display: flex; gap: 24px; font-family: var(--f-mono); font-size: 24px; color: var(--khaki); letter-spacing: .2em; opacity: 0;
+    background: rgba(10,13,9,.75); padding: 8px 22px; border: 1px solid var(--line); }
+  .pop .sub b { color: var(--c); font-weight: 400; }
+
+  .pop.on .mk { animation: mk .6s cubic-bezier(.3,1.5,.5,1) forwards; }
+  .pop.on .mk svg { animation: spin 6s linear infinite; }
+  .pop.on .hd i { animation: line .5s .35s forwards; }
+  .pop.on .hd span { animation: fade .3s .5s forwards; }
+  .pop.on h1 { animation: open .6s .6s cubic-bezier(.7,0,.2,1) forwards; }
+  .pop.on .sub { animation: fade .4s 1s forwards; }
+  .pop.off { animation: popout .5s forwards; }
+  @keyframes mk { to { transform: scale(1) } }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  @keyframes line { to { width: 180px } }
+  @keyframes fade { to { opacity: 1 } }
+  @keyframes open { to { clip-path: inset(0 0 0 0) } }
+  @keyframes popout { to { opacity: 0; transform: translateY(-30px) scale(.96) } }
+
+  .trk { position: absolute; left: 44px; top: 40px; display: flex; align-items: stretch; max-width: 640px;
+    background: rgba(10,13,9,.9); border: 1px solid var(--line); border-left: 4px solid var(--c);
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,.5)); transform: translateX(-120%); transition: transform .5s cubic-bezier(.7,0,.2,1); }
+  .trk.on { transform: none; }
+  .trk .lt { width: 64px; display: grid; place-items: center; font-family: var(--f-head); font-size: 34px; color: var(--c); border-right: 1px solid var(--line); }
+  .trk .tx { padding: 8px 18px 10px; min-width: 0; }
+  .trk small { font-family: var(--f-mono); font-size: 14px; letter-spacing: .25em; color: var(--c); }
+  .trk .t { font-family: var(--f-head); font-size: 28px; line-height: 1.1; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trk .s { font-family: var(--f-mono); font-size: 16px; color: var(--khaki); letter-spacing: .12em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trk.done .t { text-decoration: line-through; text-decoration-color: var(--c); text-decoration-thickness: 3px; }
+</style>
+</head>
+<body>
+<div class="pop" id="pop"></div>
+<div class="trk" id="trk"><div class="lt" id="tl"></div><div class="tx"><small id="ts"></small><div class="t" id="tt"></div><div class="s" id="tsub"></div></div></div>
+
+<script>
+  const KEY = 'ar-obj', $ = id => document.getElementById(id);
+  const EST = {
+    nuevo:    { c: 'var(--acc)',  h: 'NUEVO OBJETIVO',    s: 'OBJETIVO ACTUAL · ЗАДАЧА', ru: 'НОВАЯ ЗАДАЧА' },
+    cumplido: { c: '#6fcf4a',     h: 'OBJETIVO CUMPLIDO', s: 'CUMPLIDO · ВЫПОЛНЕНО', ru: 'ЗАДАЧА ВЫПОЛНЕНА' },
+    fallido:  { c: '#e8a33a',     h: 'OBJETIVO FALLIDO',  s: 'FALLIDO · ПРОВАЛ', ru: 'ЗАДАЧА ПРОВАЛЕНА' }
+  };
+  let popT, trkT;
+
+  function show(o, popup = true) {
+    const e = EST[o.estado] || EST.nuevo, pop = $('pop'), trk = $('trk');
+    clearTimeout(popT); clearTimeout(trkT);
+    if (o.estado === 'oculto') { trk.classList.remove('on'); pop.className = 'pop off'; return; }
+    document.body.style.setProperty('--c', e.c);
+    const meta = [o.sub && o.sub.toUpperCase(), o.grid && `КВАДРАТ <b>${o.grid}</b>`].filter(Boolean).map(x => `<span>${x}</span>`).join('');
+
+    // Tracker de esquina
+    $('tl').textContent = o.estado === 'cumplido' ? '✓' : o.estado === 'fallido' ? '✕' : (o.letra || '◆');
+    $('ts').textContent = e.s; $('tt').textContent = o.obj; $('tsub').textContent = [o.sub, o.grid && 'КВАДРАТ ' + o.grid].filter(Boolean).join(' · ').toUpperCase();
+    trk.classList.toggle('done', o.estado !== 'nuevo');
+    const fijar = P('fijar', '1') !== '0';
+
+    if (!popup) { if (fijar) trk.classList.add('on'); return; }
+    trk.classList.remove('on');
+    pop.innerHTML = `<div class="mk"><svg viewBox="0 0 120 120" fill="none" stroke="${e.c}">
+        <polygon points="60,6 107,33 107,87 60,114 13,87 13,33" stroke-width="3"/>
+        <circle cx="60" cy="60" r="56" stroke-width="1" stroke-dasharray="3 7" opacity=".7"/></svg>
+        <b>${o.estado === 'cumplido' ? '✓' : o.estado === 'fallido' ? '✕' : (o.letra || '◆')}</b></div>
+      <div class="hd"><i></i><span>${e.h}</span><i></i></div><div class="ru" style="font-size:18px;margin-top:6px">${e.ru}</div>
+      <h1>${o.obj}</h1>${meta ? `<div class="sub">${meta}</div>` : ''}`;
+    pop.className = 'pop'; void pop.offsetWidth; pop.classList.add('on');
+    popT = setTimeout(() => {
+      pop.className = 'pop off';
+      if (fijar) setTimeout(() => trk.classList.add('on'), 300);
+      // un objetivo cumplido/fallido se retira de la esquina al rato
+      if (o.estado !== 'nuevo') trkT = setTimeout(() => trk.classList.remove('on'), 6000);
+    }, PN('dur', 5) * 1000);
+  }
+
+  bus.on(m => { if (m.t === 'obj') show(store.get(KEY, {})); });
+
+  document.fonts.ready.then(() => {
+    if (P('obj', '')) {
+      const o = { obj: P('obj'), sub: P('sub', ''), grid: P('grid', ''), letra: P('letra', ''), estado: P('estado', 'nuevo') };
+      show(o);
+    } else {
+      const o = store.get(KEY, null);
+      if (o && o.estado === 'nuevo') show(o, false);
+    }
+  });
+</script>
+</body>
+</html>

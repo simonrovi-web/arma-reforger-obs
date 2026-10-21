@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Stinger — Arma Reforger</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  STINGER (transición) — duración 2.0 s, punto de corte ≈ 1000 ms
+  ?loop=1        repite cada 3 s (para previsualizar)
+  ?canal=TEXTO   cambia el nombre
+  Para usarlo como transición Stinger en OBS hay que tenerlo en vídeo:
+  ejecuta  render/render-stinger.bat  y usa  render/stinger.webm
+-->
+<style>
+  .stage { position: absolute; inset: 0; overflow: hidden; }
+  .bar { position: absolute; top: -10%; bottom: -10%; left: -30%; right: -30%;
+    transform: skewX(-18deg) translateX(-140%); }
+  .play .bar { animation: bar 1.8s both; }
+  .b1 { background: var(--acc); }
+  .b2 { background: var(--camo) 0 0 / 128px 128px, var(--olive2); animation-delay: .05s !important; }
+  .b3 { background: var(--olive); animation-delay: .1s !important; }
+  .b4 { background: var(--bg); animation-delay: .15s !important; overflow: hidden; }
+  .b4::before { content: ''; position: absolute; inset: 0;
+    background: linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 80px 80px,
+                linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 80px 80px; opacity: .6; }
+  @keyframes bar {
+    0% { transform: skewX(-18deg) translateX(-140%); animation-timing-function: cubic-bezier(.8,0,.2,1); }
+    40%, 60% { transform: skewX(-18deg) translateX(0); animation-timing-function: cubic-bezier(.8,0,.2,1); }
+    100% { transform: skewX(-18deg) translateX(140%); }
+  }
+
+  .content { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; }
+  .play .content { animation: content 2s both; }
+  @keyframes content {
+    0%, 38% { opacity: 0; transform: scale(1.25); filter: blur(8px); }
+    45% { opacity: 1; transform: scale(1); filter: blur(0); }
+    58% { opacity: 1; transform: scale(1); filter: blur(0); }
+    64%, 100% { opacity: 0; transform: scale(.92); filter: blur(6px); }
+  }
+  .ring { position: absolute; width: 620px; height: 620px; }
+  .play .ring { animation: spin 2s linear both; }
+  @keyframes spin { from { transform: rotate(-60deg) } to { transform: rotate(60deg) } }
+
+  .title { position: relative; text-align: center; }
+  .title .name { font-family: var(--f-head); font-size: 150px; line-height: 1; letter-spacing: .05em; color: var(--txt);
+    text-shadow: 0 0 30px rgba(0,0,0,.6); }
+  .play .title .name { animation: glitch 2s steps(1) both; }
+  @keyframes glitch {
+    0%, 44% { text-shadow: -8px 0 var(--red), 8px 0 var(--us); transform: translateX(6px); }
+    46% { text-shadow: 4px 0 var(--red), -4px 0 var(--us); transform: translateX(-4px); }
+    48%, 56% { text-shadow: 0 0 30px rgba(0,0,0,.6); transform: none; }
+    57% { text-shadow: -6px 0 var(--red), 6px 0 var(--us); transform: translateX(5px); }
+    59%, 100% { text-shadow: 0 0 30px rgba(0,0,0,.6); transform: none; }
+  }
+  .title .sub { margin-top: 18px; font-family: var(--f-mono); font-size: 30px; letter-spacing: .5em; color: var(--acc); }
+  .title .logo { height: 220px; margin: 0 auto 10px; display: flex; justify-content: center; }
+  .title .ru2 { margin-top: 10px; font-family: var(--f-mono); font-size: 24px; letter-spacing: .6em; color: var(--khaki); }
+
+  .strip { position: absolute; left: 0; right: 0; height: 26px; opacity: 0; }
+  .strip.top { top: 70px; } .strip.bot { bottom: 70px; }
+  .play .strip { animation: strip 2s both; }
+  @keyframes strip { 0%, 40% { opacity: 0; transform: scaleX(0) } 46%, 58% { opacity: 1; transform: scaleX(1) } 63%, 100% { opacity: 0; transform: scaleX(1) } }
+
+  .meta { position: absolute; font-family: var(--f-mono); font-size: 22px; color: var(--khaki); opacity: .8; letter-spacing: .15em; }
+  .meta.tl { top: 120px; left: 120px; } .meta.br { bottom: 120px; right: 120px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="stage play" id="stage">
+  <div class="bar b1"></div>
+  <div class="bar b2"></div>
+  <div class="bar b3"></div>
+  <div class="bar b4"></div>
+
+  <div class="content">
+    <div class="strip top hazard"></div>
+    <div class="strip bot hazard"></div>
+    <svg class="ring" viewBox="0 0 200 200" fill="none" stroke="currentColor" style="color:var(--acc)">
+      <circle cx="100" cy="100" r="96" stroke-width=".6" stroke-dasharray="2 4" opacity=".6"/>
+      <circle cx="100" cy="100" r="84" stroke-width="1.4" stroke-dasharray="60 20 10 20"/>
+      <circle cx="100" cy="100" r="70" stroke-width=".5" opacity=".5"/>
+      <path d="M100 0v22M100 178v22M0 100h22M178 100h22" stroke-width="1.6"/>
+    </svg>
+    <div class="title">
+      <div class="logo" data-logo><i class="star" style="font-size:90px"></i></div>
+      <div class="name" data-cfg="canal">TU CANAL</div>
+      <div class="sub" data-cfg="lema">FUERZAS RUSAS</div>
+      <div class="ru2" data-cfg="lemaRu">ВООРУЖЁННЫЕ СИЛЫ</div>
+    </div>
+    <div class="meta tl">КВАДРАТ 047-112<br>EVERON // СЕКТОР 1</div>
+    <div class="meta br">ARMA REFORGER<br>ЗАЩИЩЁННЫЙ КАНАЛ</div>
+  </div>
+</div>
+<script>
+  if (P('loop', '') !== '') {
+    const st = document.getElementById('stage');
+    setInterval(() => { st.classList.remove('play'); void st.offsetWidth; st.classList.add('play'); }, 3000);
+  }
+</script>
+</body>
+</html>

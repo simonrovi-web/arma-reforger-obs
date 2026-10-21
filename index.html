@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paquete OBS — Arma Reforger</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<style>
+  html, body { width: auto; height: auto; overflow: auto; }
+  body { background: var(--bg); padding: 40px 32px 80px; max-width: 1500px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
+  h1 { font-family: var(--f-head); font-size: 44px; font-weight: 400; }
+  header p { font-family: var(--f-mono); color: var(--muted); letter-spacing: .1em; font-size: 14px; }
+  h2 { font-family: var(--f-mono); color: var(--acc); font-size: 15px; letter-spacing: .3em; font-weight: 400; margin: 40px 0 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+  .card { background: var(--bg2); border: 1px solid var(--line); }
+  .thumb { position: relative; aspect-ratio: 16/9; overflow: hidden;
+    background: #2a2f33 repeating-conic-gradient(#30363b 0 25%, #262b2f 0 50%) 0 0 / 20px 20px; }
+  .thumb iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; pointer-events: none; }
+  .meta { padding: 14px 16px 16px; }
+  .meta h3 { font-family: var(--f-head); font-weight: 400; font-size: 22px; display: flex; justify-content: space-between; align-items: center; }
+  .meta h3 code { font-family: var(--f-mono); font-size: 13px; color: var(--muted); }
+  .meta p { color: var(--khaki); font-size: 16px; margin: 6px 0 10px; line-height: 1.35; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btns a, .btns button { font: 600 14px var(--f-body); letter-spacing: .05em; padding: 6px 12px; border: 1px solid var(--acc); color: var(--acc); background: none; text-decoration: none; cursor: pointer; }
+  .btns a:hover, .btns button:hover { background: var(--acc); color: var(--on-acc); }
+  .steps { background: var(--bg2); border: 1px solid var(--line); padding: 20px 26px; line-height: 1.6; font-size: 18px; color: var(--txt); }
+  .steps code { font-family: var(--f-mono); color: var(--acc); font-size: 15px; }
+  .steps li { margin-left: 20px; margin-bottom: 6px; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--acc); color: var(--on-acc); padding: 10px 20px; font-weight: 700; opacity: 0; transition: opacity .3s; }
+  .toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+  <div><h1><i class="star"></i> Paquete OBS · Arma Reforger</h1><p>TEMA FUERZAS RUSAS · ВООРУЖЁННЫЕ СИЛЫ — FUENTES 1920×1080</p></div>
+  <p>Edita <code style="color:var(--acc)">js/config.js</code> con el nombre de tu canal y redes</p>
+</header>
+
+<h2>// TRANSICIÓN Y PANTALLAS COMPLETAS</h2>
+<div class="grid" id="g1"></div>
+<h2>// GRÁFICAS EN DIRECTO</h2>
+<div class="grid" id="g2"></div>
+<h2>// CÓMO MONTARLO EN OBS</h2>
+<div class="steps">
+  <ol>
+    <li><b>Fuente de navegador</b> → pega la URL que copias con <b>"Copiar URL para OBS"</b>. Ancho <code>1920</code>, alto <code>1080</code>. Los textos se cambian en la URL: <code>gc.html?nombre=ST.%20SGT.%20VOLKOV</code></li>
+    <li>Marca <b>"Actualizar navegador cuando la escena se active"</b> en GC, alerta, intro y final para que se animen cada vez.</li>
+    <li><b>Stinger:</b> OBS solo acepta vídeo. <a href="render/stinger.webm" download style="color:var(--acc)">Descarga stinger.webm</a> (con transparencia; para regenerarlo: <code>render\render-stinger.bat</code>). En OBS: Transiciones → + → Stinger → ese archivo, <b>Punto de transición 1000 ms</b>.</li>
+    <li><b>Marcador y escuadra</b> se controlan en directo: clic derecho en la fuente → <b>Interactuar</b> y haz clic en bases, puntos o soldados.</li>
+    <li><b>Bajas y objetivos:</b> añade <code>control.html</code> como dock: <b>Docks → Docks de navegador personalizados</b>, URL <code>file:///C:/ruta/OBS_ArmaReforger/control.html</code>. Desde ahí sumas bajas, lanzas el K.I.A. y cambias el objetivo sin tocar las fuentes. <a href="control.html" target="_blank" style="color:var(--acc)">Abrir panel</a></li>
+    <li><b>PiP:</b> coloca tu webcam debajo del marco y ajústala al hueco (por defecto x1380 y700, 480×300).</li>
+  </ol>
+</div>
+<div class="toast" id="toast">Ruta copiada</div>
+
+<script>
+  const A = [
+    ['g1', 'stinger.html', 'Stinger', 'Barrido con camuflaje digital y estrella roja. 2 s, corte a 1000 ms.', 'stinger.html?loop=1'],
+    ['g1', 'intro.html', 'Intro', 'Empezamos pronto: cuenta atrás, radar, briefing y SITREP.', 'intro.html?min=5&operacion=AMANECER ROJO'],
+    ['g1', 'pausa.html', 'Pausa', 'BRB "Pausa táctica" con contador de tiempo fuera.', 'pausa.html'],
+    ['g1', 'final.html', 'Final', 'Misión cumplida, estadísticas, créditos y redes.', 'final.html?bajas=24&objetivos=5&tiempo=3h 12m&proximo=Viernes 21:00'],
+    ['g2', 'gc.html', 'GC persona', 'Rótulo con nombre, cargo y позывной (callsign).', 'gc.html?nombre=SGT. MARTÍNEZ&cargo=Líder de escuadra&tag=ALFA-1&dur=0'],
+    ['g2', 'gc.html', 'GC ubicación', 'Rótulo estilo película: lugar, hora y grid.', 'gc.html?tipo=ubicacion&lugar=Saint-Philippe, Everon&dur=0'],
+    ['g2', 'gc.html', 'GC tema', 'Barra de tema centrada ("AHORA").', 'gc.html?tipo=tema&dur=0'],
+    ['g2', 'mosca.html', 'Mosca', 'Logo de esquina con EN VIVO, reloj y redes.', 'mosca.html'],
+    ['g2', 'pip.html', 'Picture in Picture', 'Marco de cámara. ?modo=casco · ?layout=dual', 'pip.html?modo=casco'],
+    ['g2', 'pip.html', 'PiP dual', 'Dos ventanas lado a lado para dos jugadores.', 'pip.html?layout=dual'],
+    ['g2', 'marcador.html', 'Marcador Conflict', 'USSR vs US, puntos, bases y tiempo. Interactivo.', 'marcador.html?pa=320&pb=280&bases=RRCUU'],
+    ['g2', 'escuadra.html', 'Escuadra', 'Roster con roles y estado. Interactivo.', 'escuadra.html'],
+    ['g2', 'alerta.html', 'Alerta', 'Follow / sub / donación / raid.', 'alerta.html?tipo=sub&user=SOLDADO_RYAN&dur=999'],
+    ['g2', 'ticker.html', 'Ticker SITREP', 'Faldón inferior con mensajes.', 'ticker.html'],
+    ['g2', 'bajas.html', 'Contador de bajas', 'Bajas, muertes, K/D, rachas y pantalla K.I.A. Se controla desde control.html.', 'bajas.html'],
+    ['g2', 'objetivo.html', 'Objetivo', 'Pop-up de nuevo objetivo / cumplido / fallido que se queda en la esquina.', 'objetivo.html?obj=Capturar Saint-Philippe&sub=Base de suministros&grid=047-112&letra=B&dur=999'],
+  ];
+  const base = location.href.replace(/[^/]*$/, '');
+  for (const [g, f, n, d, demo] of A) {
+    document.getElementById(g).insertAdjacentHTML('beforeend', `<div class="card">
+      <div class="thumb"><iframe loading="lazy" src="${demo}${demo.includes('?') ? '&' : '?'}preview=1"></iframe></div>
+      <div class="meta"><h3>${n}<code>${f}</code></h3><p>${d}</p>
+      <div class="btns"><a href="${demo}" target="_blank">Abrir</a><button data-u="${base + demo}">Copiar URL para OBS</button></div></div></div>`);
+  }
+  const fit = () => document.querySelectorAll('.thumb').forEach(t => t.firstElementChild.style.transform = `scale(${t.clientWidth / 1920})`);
+  addEventListener('resize', fit); fit();
+  document.addEventListener('click', async e => {
+    const u = e.target.dataset && e.target.dataset.u; if (!u) return;
+    try { await navigator.clipboard.writeText(encodeURI(decodeURI(u))); } catch (err) { prompt('Copia esta URL:', u); return; }
+    const t = document.getElementById('toast'); t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 1500);
+  });
+</script>
+</body>
+</html>

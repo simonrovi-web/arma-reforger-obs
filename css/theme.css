@@ -1,0 +1,119 @@
+/* Tema: Fuerzas Rusas — verdes de bosque, camuflaje digital y rojo soviético. Fuentes con cirílico. */
+@import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Roboto+Condensed:wght@500;600;700&family=PT+Mono&display=swap');
+
+:root {
+  --bg: #0b100c;
+  --bg2: #141c15;
+  --olive: #263222;
+  --olive2: #45543a;
+  --khaki: #b8c0a0;
+  --acc: #c8302a;
+  --on-acc: #f3efe2;
+  --gold: #d6a93a;
+  --red: #e0402c;
+  --txt: #ebeee2;
+  --muted: #8b9480;
+  --us: #3f78e0;
+  --ussr: #c8302a;
+  --fia: #6aa142;
+  --line: rgba(184, 192, 160, .26);
+  --camo: url('../img/camo.svg');
+  --f-head: 'Russo One', Impact, sans-serif;
+  --f-body: 'Roboto Condensed', 'Segoe UI', sans-serif;
+  --f-mono: 'PT Mono', Consolas, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 1920px; height: 1080px; overflow: hidden;
+  background: transparent; color: var(--txt);
+  font-family: var(--f-body); -webkit-font-smoothing: antialiased;
+}
+body.solid { background: var(--bg); }
+.preview { background: #2a2f33 repeating-conic-gradient(#30363b 0 25%, #262b2f 0 50%) 0 0 / 40px 40px; }
+
+.head { font-family: var(--f-head); letter-spacing: .04em; text-transform: uppercase; }
+.mono { font-family: var(--f-mono); letter-spacing: .08em; }
+.acc { color: var(--acc); }
+.logo-img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+
+/* Fondo de cuadrícula de mapa */
+.grid-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(75, 90, 57, .35), transparent 60%),
+    linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(rgba(201,187,139,.08) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, rgba(201,187,139,.08) 1px, transparent 1px) 0 0 / 24px 24px,
+    var(--bg);
+}
+.vignette { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.75) 100%); }
+.scanlines { position: absolute; inset: 0; pointer-events: none; opacity: .18;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.6) 0 1px, transparent 1px 3px); }
+.noise { position: absolute; inset: -50%; pointer-events: none; opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: noise 1s steps(4) infinite; }
+@keyframes noise { 0%{transform:translate(0,0)} 25%{transform:translate(-5%,3%)} 50%{transform:translate(4%,-4%)} 75%{transform:translate(-3%,-2%)} }
+
+/* Rayas de peligro */
+.hazard { background: repeating-linear-gradient(-45deg, var(--acc) 0 18px, #0b100c 18px 36px); }
+
+/* Camuflaje digital (img/camo.svg) */
+.camo { background: var(--camo) 0 0 / 128px 128px, var(--olive); }
+
+/* Foto de fondo (img/fondo.jpg, cámbiala en config.js → fondo) */
+.photo-bg { position: absolute; inset: 0; background: var(--foto, url('../img/fondo.jpg')) right center / cover no-repeat; }
+.photo-bg::after { content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(11,16,12,.99) 0%, rgba(11,16,12,.98) 48%, rgba(11,16,12,.4) 72%, rgba(11,16,12,.55) 100%),
+              linear-gradient(0deg, rgba(11,16,12,.9), transparent 35%); }
+.photo-bg.center { background-position: 78% center; filter: blur(3px); transform: scale(1.03); }
+.photo-bg.center::after { background: linear-gradient(90deg, rgba(11,16,12,.97) 0%, rgba(11,16,12,.9) 45%, rgba(11,16,12,.6) 100%); }
+
+/* Estrella roja */
+.star { display: inline-block; width: 1em; height: 1em; background: var(--acc);
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.star.gold { background: var(--gold); }
+.ru { font-family: var(--f-mono); color: var(--muted); letter-spacing: .2em; }
+
+/* Esquinas tipo visor */
+.brackets { position: absolute; inset: 0; pointer-events: none; --b: 34px; --t: 3px; --c: var(--acc); }
+.brackets::before, .brackets::after, .brackets > i::before, .brackets > i::after {
+  content: ''; position: absolute; width: var(--b); height: var(--b); border: var(--t) solid var(--c);
+}
+.brackets::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.brackets::after { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+.brackets > i::before { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+.brackets > i::after { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+/* Punto de grabación / en vivo */
+.dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--red);
+  box-shadow: 0 0 12px var(--red); animation: blink 1.2s steps(1) infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+
+/* Chevrons animados */
+.chev { display: inline-flex; gap: 4px; }
+.chev b { width: 14px; height: 22px; background: var(--acc); clip-path: polygon(0 0, 55% 0, 100% 50%, 55% 100%, 0 100%, 45% 50%);
+  animation: chev 1.2s infinite; }
+.chev b:nth-child(2) { animation-delay: .15s; } .chev b:nth-child(3) { animation-delay: .3s; }
+@keyframes chev { 0%,100% { opacity: .2 } 40% { opacity: 1 } }
+
+/* Radar */
+.radar { position: absolute; border-radius: 50%; border: 2px solid var(--line); overflow: hidden;
+  background:
+    radial-gradient(circle, transparent 24%, var(--line) 24.3%, transparent 24.8%, transparent 49%, var(--line) 49.3%, transparent 49.8%, transparent 74%, var(--line) 74.3%, transparent 74.8%),
+    linear-gradient(transparent 49.85%, var(--line) 50%, transparent 50.15%),
+    linear-gradient(90deg, transparent 49.85%, var(--line) 50%, transparent 50.15%),
+    radial-gradient(circle, rgba(75,90,57,.35), rgba(10,13,9,.6)); }
+.radar::after { content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 0deg, color-mix(in srgb, var(--acc) 55%, transparent), transparent 22%);
+  animation: sweep 4s linear infinite; }
+.radar .blip { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--acc);
+  box-shadow: 0 0 10px var(--acc); animation: blip 4s infinite; }
+@keyframes sweep { to { transform: rotate(360deg); } }
+@keyframes blip { 0%,100% { opacity: 0 } 10% { opacity: 1 } 60% { opacity: .1 } }
+
+/* Ticker */
+.crawl { white-space: nowrap; display: inline-block; animation: crawl var(--speed, 40s) linear infinite; }
+@keyframes crawl { from { transform: translateX(0) } to { transform: translateX(-50%) } }

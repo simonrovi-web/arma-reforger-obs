@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control — Bajas y objetivos</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  PANEL DE CONTROL para usar como dock dentro de OBS:
+    Docks → Docks de navegador personalizados → Nombre: "Control Arma"
+    URL: file:///C:/ruta/OBS_ArmaReforger/control.html
+  Controla en directo bajas.html y objetivo.html (deben estar en la misma carpeta).
+  Atajos con el dock enfocado: K = baja · M = KIA · Z = deshacer baja
+-->
+<style>
+  html, body { width: auto; height: auto; overflow: auto; }
+  body { background: var(--bg); padding: 14px; font-size: 16px; min-width: 260px; }
+  h2 { font-family: var(--f-mono); font-weight: 400; font-size: 13px; letter-spacing: .25em; color: var(--acc); margin: 4px 0 10px; display: flex; justify-content: space-between; }
+  section { border: 1px solid var(--line); background: var(--bg2); padding: 12px; margin-bottom: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; margin-bottom: 10px; }
+  .stats b { display: block; font-family: var(--f-mono); font-weight: 400; font-size: 26px; color: var(--txt); }
+  .stats b.a { color: var(--acc); }
+  .stats span { font-family: var(--f-mono); font-size: 11px; color: var(--muted); letter-spacing: .15em; }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; margin-top: 6px; }
+  button { font: 700 15px var(--f-body); letter-spacing: .05em; padding: 10px 8px; border: 1px solid var(--line); background: var(--olive); color: var(--txt); cursor: pointer; }
+  button:hover { filter: brightness(1.25); }
+  button:active { transform: translateY(1px); }
+  .big { font-family: var(--f-head); font-weight: 400; font-size: 22px; padding: 14px 8px; }
+  .kill { background: var(--acc); color: var(--on-acc); border-color: var(--acc); }
+  .kia { background: #6b1a12; border-color: var(--red); color: #ffd1cb; }
+  .ok { background: #2d5a1e; border-color: #6fcf4a; }
+  .bad { background: #6b1a12; border-color: var(--red); }
+  .ghost { background: none; color: var(--muted); }
+  label { display: block; font-family: var(--f-mono); font-size: 11px; letter-spacing: .15em; color: var(--muted); margin: 8px 0 3px; }
+  input { width: 100%; font: 600 16px var(--f-body); padding: 8px 10px; background: var(--bg); color: var(--txt); border: 1px solid var(--line); }
+  input:focus { outline: 2px solid var(--acc); outline-offset: -1px; }
+  .two { display: grid; grid-template-columns: 1fr 70px; gap: 8px; }
+  .now { font-family: var(--f-mono); font-size: 13px; color: var(--khaki); margin-top: 10px; min-height: 1.2em; }
+  .hint { font-family: var(--f-mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+</style>
+</head>
+<body>
+<section>
+  <h2><span>// BAJAS</span><span class="hint">K · M · Z</span></h2>
+  <div class="stats">
+    <div><b class="a" id="k">0</b><span>BAJAS</span></div>
+    <div><b id="d">0</b><span>MUERTES</span></div>
+    <div><b id="kd">0.00</b><span>K/D</span></div>
+    <div><b id="r">0</b><span>RACHA</span></div>
+  </div>
+  <div class="row">
+    <button class="big kill" data-b="kill">+1 BAJA</button>
+    <button class="big kia" data-b="death">K.I.A.</button>
+  </div>
+  <div class="row">
+    <button data-b="undo">−1 baja</button>
+    <button class="ghost" data-b="reset">Reiniciar</button>
+  </div>
+</section>
+
+<section>
+  <h2><span>// OBJETIVO</span></h2>
+  <label for="obj">OBJETIVO</label>
+  <input id="obj" list="objs" placeholder="Capturar Saint-Philippe">
+  <div class="two">
+    <div><label for="sub">DETALLE</label><input id="sub" placeholder="Base de suministros"></div>
+    <div><label for="letra">LETRA</label><input id="letra" maxlength="2" placeholder="B"></div>
+  </div>
+  <label for="grid">GRID</label>
+  <input id="grid" placeholder="047-112">
+  <div class="row">
+    <button class="big kill" data-o="nuevo">NUEVO</button>
+  </div>
+  <div class="row">
+    <button class="ok" data-o="cumplido">✓ Cumplido</button>
+    <button class="bad" data-o="fallido">✕ Fallido</button>
+    <button class="ghost" data-o="oculto">Ocultar</button>
+  </div>
+  <div class="now" id="now"></div>
+</section>
+
+<datalist id="objs">
+  <option>Capturar Saint-Philippe</option><option>Capturar Montignac</option><option>Capturar Morton</option>
+  <option>Capturar Levie</option><option>Capturar Chotain</option><option>Capturar Gravette</option>
+  <option>Defender la base</option><option>Establecer FOB</option><option>Asegurar la antena de radio</option>
+  <option>Escoltar el convoy de suministros</option><option>Destruir el depósito de munición</option><option>Evacuar heridos</option>
+</datalist>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  // ---- Bajas (misma lógica que bajas.html) ----
+  function bajas(ev) {
+    let S = store.get('ar-bajas', { k: 0, d: 0, r: 0, best: 0 });
+    if (ev === 'kill') { S.k++; S.r++; S.best = Math.max(S.best, S.r); }
+    if (ev === 'undo') { S.k = Math.max(0, S.k - 1); S.r = Math.max(0, S.r - 1); }
+    if (ev === 'death') { S.d++; S.r = 0; }
+    if (ev === 'reset') { if (!confirm('¿Reiniciar bajas y muertes a 0?')) return; S = { k: 0, d: 0, r: 0, best: 0 }; }
+    store.set('ar-bajas', S); bus.send({ t: 'bajas', ev }); renderB();
+  }
+  function renderB() {
+    const S = store.get('ar-bajas', { k: 0, d: 0, r: 0, best: 0 });
+    $('k').textContent = S.k; $('d').textContent = S.d; $('r').textContent = S.r;
+    $('kd').textContent = (S.d ? S.k / S.d : S.k).toFixed(2);
+  }
+
+  // ---- Objetivo ----
+  function objetivo(estado) {
+    const prev = store.get('ar-obj', {});
+    const o = { obj: $('obj').value.trim() || prev.obj || 'Objetivo', sub: $('sub').value.trim(), grid: $('grid').value.trim(), letra: $('letra').value.trim().toUpperCase(), estado };
+    store.set('ar-obj', o); bus.send({ t: 'obj' }); renderO();
+  }
+  function renderO() {
+    const o = store.get('ar-obj', null);
+    $('now').textContent = o ? `EN PANTALLA: ${o.estado === 'oculto' ? '—' : o.obj} [${o.estado}]` : '';
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.b) bajas(b.dataset.b);
+    if (b.dataset.o) objetivo(b.dataset.o);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') { if (e.key === 'Enter') objetivo('nuevo'); return; }
+    const k = { k: 'kill', m: 'death', z: 'undo' }[e.key.toLowerCase()]; if (k) bajas(k);
+  });
+  bus.on(m => { if (m.t === 'bajas') renderB(); if (m.t === 'obj') renderO(); });
+
+  const o = store.get('ar-obj', null);
+  if (o) { $('obj').value = o.obj || ''; $('sub').value = o.sub || ''; $('grid').value = o.grid || ''; $('letra').value = o.letra || ''; }
+  renderB(); renderO();
+</script>
+</body>
+</html>

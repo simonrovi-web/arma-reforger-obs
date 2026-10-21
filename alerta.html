@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Alerta — Follow / Sub / Donación</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  ALERTA — se reproduce al cargar (o pulsa en la fuente con "Interactuar").
+  ?tipo=follow | sub | donacion | raid
+  ?user=NOMBRE   ?monto=5€   ?dur=6
+  Sirve de plantilla: puedes copiar el HTML/CSS en la alerta personalizada
+  de StreamElements / Streamlabs y usar sus variables ({name}, {amount}).
+-->
+<style>
+  .al { position: absolute; left: 50%; top: 150px; width: 900px; margin-left: -450px; text-align: center; }
+  .head { display: inline-flex; align-items: center; gap: 18px; background: var(--acc); color: var(--on-acc); padding: 10px 34px;
+    font-family: var(--f-head); font-size: 34px; clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0 50%);
+    transform: scaleX(0); }
+  .panel { margin-top: 14px; background: rgba(10,13,9,.94); border: 1px solid var(--line); border-top: 4px solid var(--acc);
+    padding: 26px 40px 30px; position: relative; clip-path: inset(0 0 100% 0); }
+  .panel .brackets { --b: 22px; --t: 3px; inset: 8px; }
+  .user { font-family: var(--f-head); font-size: 76px; line-height: 1.05; text-transform: uppercase; }
+  .msg { font-family: var(--f-mono); font-size: 26px; color: var(--khaki); letter-spacing: .2em; margin-top: 8px; text-transform: uppercase; }
+  .msg b { color: var(--acc); font-weight: 400; }
+  .beam { position: absolute; left: 50%; top: 0; width: 4px; height: 150px; margin-left: -2px; background: linear-gradient(transparent, var(--acc)); transform: scaleY(0); transform-origin: top; }
+
+  .go .beam { animation: beam .35s forwards, fadeo .3s .6s forwards; }
+  .go .head { animation: sx .4s .3s cubic-bezier(.3,1.4,.5,1) forwards; }
+  .go .panel { animation: drop .5s .55s cubic-bezier(.7,0,.2,1) forwards; }
+  .leave .head, .leave .panel { animation: out .5s forwards !important; }
+  @keyframes beam { to { transform: scaleY(1) } }
+  @keyframes fadeo { to { opacity: 0 } }
+  @keyframes sx { to { transform: scaleX(1) } }
+  @keyframes drop { to { clip-path: inset(0 0 0 0) } }
+  @keyframes out { to { opacity: 0; transform: translateY(-30px) } }
+  .flash { position: absolute; inset: 0; background: var(--acc); opacity: 0; pointer-events: none; }
+  .go .flash { animation: flash .5s .3s; }
+  @keyframes flash { 0% { opacity: .25 } 100% { opacity: 0 } }
+</style>
+</head>
+<body>
+<div class="flash"></div>
+<div class="al" id="al">
+  <div class="beam"></div>
+  <div class="head"><span class="chev"><b></b><b></b><b></b></span><span id="h"></span><span class="chev" style="transform:scaleX(-1)"><b></b><b></b><b></b></span></div>
+  <div class="panel"><div class="brackets"><i></i></div><div class="ru" id="ru" style="font-size:20px;margin-bottom:6px"></div><div class="user" id="u"></div><div class="msg" id="m"></div></div>
+</div>
+<script>
+  const T = {
+    follow:   ['NUEVO RECLUTA', 'se ha alistado en la unidad', 'НОВОБРАНЕЦ'],
+    sub:      ['REFUERZOS EN CAMINO', 'se ha suscrito <b>— спасибо, товарищ</b>', 'ПОДКРЕПЛЕНИЕ'],
+    donacion: ['SUMINISTROS RECIBIDOS', 'ha enviado <b>{m}</b> en munición', 'СНАБЖЕНИЕ'],
+    raid:     ['¡ASALTO ENTRANTE!', 'llega con <b>{m}</b> tropas', 'ШТУРМ']
+  };
+  const al = document.getElementById('al');
+  function play() {
+    const [h, m, ru] = T[P('tipo', 'sub')] || T.sub;
+    document.getElementById('ru').textContent = '★ ' + ru + ' ★';
+    document.getElementById('h').textContent = h;
+    document.getElementById('m').innerHTML = m.replace('{m}', P('monto', '5€'));
+    const u = document.getElementById('u'); u.textContent = '';
+    al.className = 'al'; document.body.classList.remove('go'); void al.offsetWidth;
+    al.classList.add('go'); document.body.classList.add('go');
+    setTimeout(() => scramble(u, P('user', 'TOVARISCH_IVAN'), 900), 900);
+    setTimeout(() => al.classList.add('leave'), PN('dur', 6) * 1000);
+  }
+  document.fonts.ready.then(play);
+  document.addEventListener('click', play);
+</script>
+</body>
+</html>

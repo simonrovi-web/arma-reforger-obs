@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Intro — Empezamos pronto</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  INTRO / "EMPEZAMOS PRONTO"
+  ?min=5            minutos de cuenta atrás (0 = sin cuenta atrás)
+  ?titulo=TEXTO     titular grande
+  ?operacion=NOMBRE nombre de la operación
+  ?mapa= ?modo= ?faccion= ?servidor=
+-->
+<style>
+  .wrap { position: absolute; inset: 0; }
+  .left { position: absolute; left: 140px; top: 130px; width: 1000px; }
+  .tag { display: inline-flex; align-items: center; gap: 14px; padding: 8px 18px; border: 2px solid var(--acc);
+    font-family: var(--f-mono); font-size: 24px; color: var(--acc); letter-spacing: .25em; }
+  .op { margin-top: 30px; font-family: var(--f-mono); font-size: 28px; color: var(--khaki); letter-spacing: .3em; }
+  h1 { font-family: var(--f-head); font-size: 112px; line-height: .95; margin-top: 10px; text-transform: uppercase; }
+  .count { margin-top: 20px; display: flex; align-items: baseline; gap: 26px; }
+  .count .t { font-family: var(--f-mono); font-size: 140px; line-height: 1; color: var(--acc); text-shadow: 0 0 40px color-mix(in srgb, var(--acc) 40%, transparent); }
+  .count .l { font-family: var(--f-mono); font-size: 26px; color: var(--muted); letter-spacing: .3em; }
+  .count.done .t { animation: blink .8s steps(1) infinite; font-size: 110px; }
+
+  .brief { position: absolute; left: 140px; bottom: 110px; width: 1000px; border-left: 4px solid var(--acc);
+    background: linear-gradient(90deg, rgba(20,26,17,.9), rgba(20,26,17,0)); padding: 24px 32px; }
+  .brief h3 { font-family: var(--f-mono); color: var(--acc); font-size: 22px; letter-spacing: .3em; margin-bottom: 14px; }
+  .brief .row { display: grid; grid-template-columns: 220px 1fr; font-size: 30px; font-weight: 600; line-height: 1.45; }
+  .brief .row span:first-child { font-family: var(--f-mono); font-weight: 400; color: var(--muted); font-size: 24px; letter-spacing: .15em; padding-top: 4px; }
+
+  .radar { right: 180px; top: 200px; width: 600px; height: 600px; }
+  .coords { position: absolute; right: 80px; top: 100px; width: 520px; text-shadow: 0 1px 4px #000; font-family: var(--f-mono); font-size: 22px; color: var(--khaki); display: flex; justify-content: space-between; letter-spacing: .12em; }
+
+  .topbar, .botbar { position: absolute; left: 0; right: 0; height: 64px; display: flex; align-items: center;
+    padding: 0 140px; font-family: var(--f-mono); font-size: 22px; letter-spacing: .25em; color: var(--khaki);
+    background: rgba(10,13,9,.85); border-color: var(--line); border-style: solid; border-width: 0; }
+  .topbar { top: 0; border-bottom-width: 1px; justify-content: space-between; }
+  .botbar { bottom: 0; border-top-width: 1px; overflow: hidden; padding: 0; }
+  .botbar .lbl { flex: none; height: 100%; display: flex; align-items: center; padding: 0 30px 0 140px; background: var(--acc); color: var(--on-acc); font-weight: 700; z-index: 1; }
+  .botbar .crawl { padding-left: 40px; }
+  .hz { position: absolute; left: 0; right: 0; top: 64px; height: 10px; }
+
+  .in { opacity: 0; animation: in .8s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes in { from { opacity: 0; transform: translateX(-40px) } to { opacity: 1; transform: none } }
+</style>
+</head>
+<body class="solid">
+<div class="photo-bg"></div>
+<div class="noise"></div>
+<div class="vignette"></div>
+<div class="scanlines"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <span><i class="star"></i>&nbsp; <span data-cfg="canal">TU CANAL</span> // <span data-cfg="lema"></span> // <span data-cfg="lemaRu"></span></span>
+    <span id="clock">00:00:00</span>
+  </div>
+  <div class="hz hazard"></div>
+
+  <div class="left">
+    <div class="tag in"><span class="dot"></span> ПОДГОТОВКА // PREPARANDO DESPLIEGUE</div>
+    <div class="op in" style="animation-delay:.15s">OPERACIÓN <span id="op">TORMENTA DE ACERO</span></div>
+    <h1 class="in" id="titulo" style="animation-delay:.3s">Empezamos<br>en breve</h1>
+    <div class="count in" id="count" style="animation-delay:.45s"><span class="t" id="t">05:00</span><span class="l">ДО НАЧАЛА</span></div>
+  </div>
+
+  <div class="brief in" style="animation-delay:.6s">
+    <h3>// БРИФИНГ — BRIEFING DE MISIÓN</h3>
+    <div class="row"><span>MAPA</span><span data-cfg="mapa"></span></div>
+    <div class="row"><span>MODO</span><span data-cfg="modo"></span></div>
+    <div class="row"><span>FACCIÓN</span><span data-cfg="faccion"></span></div>
+    <div class="row"><span>SERVIDOR</span><span data-cfg="servidor"></span></div>
+  </div>
+
+  <div class="coords"><span>КВАДРАТ 047-112</span><span id="sig">СВЯЗЬ ▮▮▮▮▯</span></div>
+
+  <div class="botbar">
+    <div class="lbl">СВОДКА</div>
+    <div class="crawl" id="crawl" style="--speed:45s"></div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('op').textContent = P('operacion', 'TORMENTA DE ACERO').toUpperCase();
+  const tt = P('titulo', ''); if (tt) document.getElementById('titulo').textContent = tt;
+
+  const msgs = PL('ticker', []); const txt = msgs.map(m => '◆ ' + m.toUpperCase()).join('      ') + '      ';
+  document.getElementById('crawl').textContent = txt + txt;
+
+  setInterval(() => document.getElementById('clock').textContent = clockStr(), 1000);
+  document.getElementById('clock').textContent = clockStr();
+
+  const total = PN('min', 5) * 60, t0 = Date.now(), el = document.getElementById('t'), box = document.getElementById('count');
+  if (total <= 0) box.style.display = 'none';
+  else (function tick() {
+    const left = Math.max(0, total - Math.floor((Date.now() - t0) / 1000));
+    el.textContent = pad(Math.floor(left / 60)) + ':' + pad(left % 60);
+    if (left === 0) { box.classList.add('done'); el.textContent = 'ВПЕРЁД!'; box.querySelector('.l').textContent = ''; return; }
+    setTimeout(tick, 250);
+  })();
+
+  const bars = ['▮▮▮▮▯', '▮▮▮▯▯', '▮▮▮▮▮', '▮▮▮▮▯'];
+  let s = 0; setInterval(() => document.getElementById('sig').textContent = 'СВЯЗЬ ' + bars[s++ % 4], 1700);
+</script>
+</body>
+</html>

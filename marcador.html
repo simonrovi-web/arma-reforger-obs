@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Marcador — Conflict</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  MARCADOR DE CONFLICT (USSR vs US) — arriba al centro.
+  ?a=USSR&b=US          nombres de bandos (A = izquierda, tu bando)
+  ?pa=320&pb=280        puntos     ?max=1000  puntos para ganar
+  ?bases=RRNUU          dueño de cada base: R=USSR (bando A), U=US (bando B), N=neutral, C=en disputa
+  ?nombres=A|B|C|D|E    nombres de las bases
+  ?tiempo=45            minutos de ronda (cuenta atrás)
+
+  EN DIRECTO: en OBS clic derecho en la fuente → "Interactuar":
+    · clic en una base = cambia de dueño
+    · clic izq/der en un marcador = +10 / −10 puntos
+  Los cambios se guardan aunque refresques la fuente.
+-->
+<style>
+  .sb { position: absolute; top: 26px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,.55)); user-select: none; }
+  .main { display: flex; align-items: stretch; height: 72px; }
+  .side { width: 330px; display: flex; align-items: center; gap: 16px; padding: 0 22px; background: rgba(10,13,9,.92); position: relative; overflow: hidden; cursor: pointer; }
+  .side.a { justify-content: flex-end; border-bottom: 4px solid var(--ussr); clip-path: polygon(24px 0, 100% 0, 100% 100%, 0 100%); }
+  .side.b { border-bottom: 4px solid var(--us); clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 100%, 0 100%); }
+  .side .nm { font-family: var(--f-head); font-size: 34px; }
+  .side .pts { font-family: var(--f-mono); font-size: 46px; min-width: 110px; }
+  .side.a .pts { text-align: right; color: #ffa197; } .side.b .pts { color: #9cc0ff; }
+  .side .fill { position: absolute; bottom: 0; height: 6px; transition: width .6s; opacity: .9; }
+  .side.a .fill { right: 0; background: var(--ussr); } .side.b .fill { left: 0; background: var(--us); }
+  .flag { width: 46px; height: 30px; border: 1px solid rgba(255,255,255,.3); flex: none; }
+  .b .flag { background: linear-gradient(var(--us) 0 50%, transparent 0), repeating-linear-gradient(#b22234 0 4px, #fff 4px 8px); background-size: 45% 100%, 100% 100%; background-repeat: no-repeat; }
+  .a .flag { background: #c8102e; position: relative; }
+  .a .flag::after { content: '★'; position: absolute; left: 5px; top: 1px; font-size: 12px; color: #ffd700; }
+  .mid { width: 170px; background: var(--camo) 0 0 / 96px 96px, var(--olive); color: var(--txt); text-shadow: 0 2px 4px #000; border-bottom: 4px solid var(--gold); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .mid .tm { font-family: var(--f-mono); font-size: 38px; line-height: 1; }
+  .mid small { font-family: var(--f-mono); font-size: 14px; letter-spacing: .25em; }
+  .bases { display: flex; gap: 8px; margin-top: 10px; }
+  .base { width: 54px; height: 54px; display: grid; place-items: center; font-family: var(--f-head); font-size: 26px; cursor: pointer;
+    background: rgba(10,13,9,.9); border: 2px solid var(--muted); color: var(--muted); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    transition: background .3s, color .3s; }
+  .base.U { background: var(--us); color: #fff; } .base.R { background: var(--ussr); color: #fff; }
+  .base.C { background: var(--gold); color: #1a1a10; animation: blink .8s steps(1) infinite; }
+  .pulse { animation: pulse .6s; } @keyframes pulse { 50% { transform: scale(1.08); filter: brightness(1.6) } }
+</style>
+</head>
+<body>
+<div class="sb">
+  <div class="main">
+    <div class="side a" id="sa"><div class="fill" id="fa"></div><span class="pts" id="pa"></span><span class="nm" id="na"></span><i class="flag"></i></div>
+    <div class="mid"><span class="tm" id="tm">45:00</span><small>КОНФЛИКТ</small></div>
+    <div class="side b" id="sb"><div class="fill" id="fb"></div><i class="flag"></i><span class="nm" id="nb"></span><span class="pts" id="pb"></span></div>
+  </div>
+  <div class="bases" id="bases"></div>
+</div>
+<script>
+  const KEY = 'ar-marcador', MAX = PN('max', 1000);
+  let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+  const fromUrl = /[?&](pa|pb|bases)=/.test(location.search);
+  const S = {
+    pa: fromUrl ? PN('pa', 0) : (saved.pa ?? 0),
+    pb: fromUrl ? PN('pb', 0) : (saved.pb ?? 0),
+    bases: (fromUrl ? P('bases', 'RRNUU') : (saved.bases || 'RRNUU')).toUpperCase().split('')
+  };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ ...S, bases: S.bases.join('') })); } catch (e) {} };
+  const names = PL('nombres', 'A|B|C|D|E|F|G|H');
+  document.getElementById('na').textContent = P('a', 'USSR');
+  document.getElementById('nb').textContent = P('b', 'US');
+
+  function render() {
+    const $ = id => document.getElementById(id);
+    $('pa').textContent = S.pa; $('pb').textContent = S.pb;
+    $('fa').style.width = Math.min(100, S.pa / MAX * 100) + '%';
+    $('fb').style.width = Math.min(100, S.pb / MAX * 100) + '%';
+    $('bases').innerHTML = S.bases.map((o, i) => `<div class="base ${o}" data-i="${i}">${names[i] || i + 1}</div>`).join('');
+  }
+  const bump = el => { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); };
+  document.getElementById('bases').addEventListener('click', e => {
+    const b = e.target.closest('.base'); if (!b) return;
+    const order = ['N', 'R', 'C', 'U'], i = +b.dataset.i;
+    S.bases[i] = order[(order.indexOf(S.bases[i]) + 1) % 4]; render(); save();
+  });
+  [['sa', 'pa'], ['sb', 'pb']].forEach(([id, k]) => {
+    const el = document.getElementById(id);
+    el.addEventListener('click', () => { S[k] += 10; render(); save(); bump(el); });
+    el.addEventListener('contextmenu', e => { e.preventDefault(); S[k] = Math.max(0, S[k] - 10); render(); save(); bump(el); });
+  });
+  render();
+
+  const end = Date.now() + PN('tiempo', 45) * 60000;
+  setInterval(() => { const s = Math.max(0, Math.round((end - Date.now()) / 1000)); document.getElementById('tm').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 500);
+</script>
+</body>
+</html>

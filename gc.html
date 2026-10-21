@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>GC — Rótulos</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  GC / RÓTULOS (generador de caracteres). Se anima al cargar la fuente.
+  Truco OBS: marca "Actualizar navegador cuando la escena se active" o
+  asigna un atajo a mostrar/ocultar la fuente para relanzarlo.
+
+  ?tipo=persona   (por defecto)  ?nombre=  ?cargo=  ?tag=ALFA-1
+  ?tipo=ubicacion               ?lugar=  ?zona=  ?grid=   (estilo película)
+  ?tipo=tema                    ?titulo= ?sub=           (barra de tema / noticia)
+  ?dur=8     segundos visible (0 = se queda fijo)
+  ?pos=izq | der
+-->
+<style>
+  /* ---------- PERSONA ---------- */
+  .gc { position: absolute; bottom: 120px; left: 110px; display: flex; align-items: stretch; height: 118px; }
+  .gc.der { left: auto; right: 110px; flex-direction: row-reverse; }
+  .gc .tag { width: 0; overflow: hidden; background: var(--acc); color: var(--on-acc); display: flex; flex-direction: column; justify-content: center; align-items: center;
+    font-family: var(--f-mono); transition: width .45s cubic-bezier(.7,0,.2,1); }
+  .gc .tag small { font-size: 16px; letter-spacing: .2em; }
+  .gc .tag b { font-family: var(--f-head); font-size: 30px; font-weight: 400; white-space: nowrap; }
+  .gc .body { position: relative; overflow: hidden; background: rgba(10,13,9,.92); border-bottom: 3px solid var(--acc);
+    clip-path: inset(0 100% 0 0); transition: clip-path .6s .3s cubic-bezier(.7,0,.2,1); padding: 16px 40px 0 30px; min-width: 560px; }
+  .gc.der .body { clip-path: inset(0 0 0 100%); }
+  .gc .body::after { content: ''; position: absolute; right: 0; top: 0; width: 60px; height: 100%;
+    background: repeating-linear-gradient(-45deg, var(--line) 0 2px, transparent 2px 10px); }
+  .gc .n { font-family: var(--f-head); font-size: 52px; line-height: 1.05; white-space: nowrap; text-transform: uppercase; }
+  .gc .c { font-family: var(--f-mono); font-size: 24px; color: var(--acc); letter-spacing: .2em; margin-top: 4px; white-space: nowrap; }
+  .gc.on .tag { width: 200px; }
+  .gc.on .body { clip-path: inset(0 0 0 0); }
+  .gc.off .body { transition-delay: 0s; clip-path: inset(0 100% 0 0); }
+  .gc.der.off .body { clip-path: inset(0 0 0 100%); }
+  .gc.off .tag { transition-delay: .45s; width: 0; }
+
+  /* ---------- UBICACIÓN ---------- */
+  .loc { position: absolute; left: 120px; bottom: 140px; font-family: var(--f-mono); color: var(--txt); text-shadow: 0 2px 8px #000; }
+  .loc.der { left: auto; right: 120px; text-align: right; }
+  .loc .l1 { font-size: 44px; letter-spacing: .12em; min-height: 54px; }
+  .loc .l2, .loc .l3 { font-size: 26px; letter-spacing: .2em; color: var(--khaki); min-height: 36px; }
+  .loc .l3 { color: var(--acc); }
+  .loc .cur::after { content: '█'; animation: blink .7s steps(1) infinite; color: var(--acc); }
+  .loc.off { transition: opacity .6s; opacity: 0; }
+
+  /* ---------- TEMA ---------- */
+  .topic { position: absolute; left: 0; right: 0; bottom: 90px; display: flex; justify-content: center; }
+  .topic .box { display: flex; align-items: center; height: 96px; background: rgba(10,13,9,.94); border-top: 3px solid var(--acc);
+    transform: scaleX(0); transition: transform .6s cubic-bezier(.7,0,.2,1); }
+  .topic .lbl { height: 100%; display: grid; place-items: center; padding: 0 30px; background: var(--acc); color: var(--on-acc); font-family: var(--f-head); font-size: 32px; }
+  .topic .txt { padding: 0 40px; opacity: 0; transition: opacity .3s .5s; }
+  .topic .t { font-family: var(--f-head); font-size: 40px; text-transform: uppercase; white-space: nowrap; }
+  .topic .s { font-family: var(--f-mono); font-size: 20px; color: var(--khaki); letter-spacing: .2em; }
+  .topic.on .box { transform: scaleX(1); }
+  .topic.on .txt { opacity: 1; }
+  .topic.off .txt { transition-delay: 0s; opacity: 0; }
+  .topic.off .box { transition-delay: .25s; transform: scaleX(0); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  const tipo = P('tipo', 'persona'), dur = PN('dur', 8) * 1000, der = P('pos', 'izq') === 'der' ? ' der' : '';
+  const root = document.getElementById('root');
+
+  async function persona() {
+    root.innerHTML = `<div class="gc${der}" id="g">
+      <div class="tag"><small>ПОЗЫВНОЙ</small><b>${P('tag', 'БЕРКУТ-1')}</b></div>
+      <div class="body"><div class="n" id="n"></div><div class="c" id="c"></div></div></div>`;
+    const g = document.getElementById('g');
+    await wait(150); g.classList.add('on');
+    await wait(350); scramble(document.getElementById('n'), P('nombre', 'ST. SGT. VOLKOV'), 800);
+    await wait(300); scramble(document.getElementById('c'), P('cargo', 'КОМАНДИР ОТДЕЛЕНИЯ // JEFE DE ESCUADRA').toUpperCase(), 900);
+    if (dur > 0) { await wait(dur); g.classList.add('off'); }
+  }
+
+  async function ubicacion() {
+    root.innerHTML = `<div class="loc${der}" id="g"><div class="l1"></div><div class="l2"></div><div class="l3"></div></div>`;
+    const g = document.getElementById('g'), [a, b, c] = g.children;
+    const now = new Date();
+    const lines = [P('lugar', 'MONTIGNAC, EVERON').toUpperCase(),
+                   P('zona', pad(now.getHours()) + pad(now.getMinutes()) + ' ЧАС — ZONA DE OPERACIONES').toUpperCase(),
+                   'КВАДРАТ ' + P('grid', '047-112')];
+    for (const [el, t] of [[a, lines[0]], [b, lines[1]], [c, lines[2]]]) {
+      el.classList.add('cur'); await typeText(el, t, 45); el.classList.remove('cur'); await wait(200);
+    }
+    c.classList.add('cur');
+    if (dur > 0) { await wait(dur); g.classList.add('off'); }
+  }
+
+  async function tema() {
+    root.innerHTML = `<div class="topic" id="g"><div class="box"><div class="lbl">${P('etiqueta', 'СЕЙЧАС')}</div>
+      <div class="txt"><div class="t">${P('titulo', 'Asalto a la base de Saint-Philippe')}</div><div class="s">${P('sub', 'CONFLICT // USSR vs US').toUpperCase()}</div></div></div></div>`;
+    const g = document.getElementById('g');
+    await wait(150); g.classList.add('on');
+    if (dur > 0) { await wait(dur); g.classList.add('off'); }
+  }
+
+  document.fonts.ready.then(() => ({ persona, ubicacion, tema }[tipo] || persona)());
+</script>
+</body>
+</html>

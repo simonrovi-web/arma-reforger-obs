@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mosca — Logo de esquina</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  MOSCA (logo fijo de esquina) con EN VIVO, reloj y redes rotando.
+  ?pos=tr (arriba-der, por defecto) | tl | br | bl
+  ?vivo=0        oculta el indicador EN VIVO
+  ?reloj=0       oculta el reloj
+-->
+<style>
+  .bug { position: absolute; display: flex; align-items: stretch; gap: 0; filter: drop-shadow(0 4px 14px rgba(0,0,0,.5));
+    opacity: 0; animation: in .7s .2s cubic-bezier(.2,.8,.2,1) forwards; }
+  .tr { top: 40px; right: 44px; } .tl { top: 40px; left: 44px; } .br { bottom: 40px; right: 44px; } .bl { bottom: 40px; left: 44px; }
+  @keyframes in { from { opacity: 0; transform: translateY(-14px) } to { opacity: 1; transform: none } }
+
+  .emb { width: 86px; height: 86px; background: var(--acc); color: var(--on-acc); display: grid; place-items: center;
+    clip-path: polygon(0 0, 100% 0, 100% 78%, 78% 100%, 0 100%); font-family: var(--f-head); font-size: 44px; padding: 8px; }
+  .info { background: rgba(10,13,9,.88); border: 1px solid var(--line); border-left: 0; padding: 10px 20px; min-width: 250px;
+    display: flex; flex-direction: column; justify-content: center; }
+  .name { font-family: var(--f-head); font-size: 28px; line-height: 1; text-transform: uppercase; }
+  .row { display: flex; align-items: center; gap: 12px; margin-top: 8px; font-family: var(--f-mono); font-size: 17px; letter-spacing: .14em; color: var(--khaki); }
+  .live { display: inline-flex; align-items: center; gap: 7px; color: var(--txt); }
+  .live .dot { width: 10px; height: 10px; }
+  .rot { margin-top: 6px; font-family: var(--f-mono); font-size: 16px; color: var(--acc); height: 20px; overflow: hidden; letter-spacing: .06em; }
+  .rot span { display: block; transition: transform .5s, opacity .5s; }
+  .rot span.out { transform: translateY(-20px); opacity: 0; }
+</style>
+</head>
+<body>
+<div class="bug" id="bug">
+  <div class="emb" data-logo id="emb"></div>
+  <div class="info">
+    <div class="name" data-cfg="canal">TU CANAL</div>
+    <div class="row"><span class="live" id="live"><i class="dot"></i>EN VIVO · В ЭФИРЕ</span><span id="clock"></span></div>
+    <div class="rot"><span id="rot"></span></div>
+  </div>
+</div>
+<script>
+  const pos = P('pos', 'tr'); document.getElementById('bug').classList.add(pos);
+  const emb = document.getElementById('emb'); if (!P('logo', '')) emb.innerHTML = '<i class="star gold" style="font-size:54px"></i>';
+  if (P('vivo', '1') === '0') document.getElementById('live').remove();
+  const ck = document.getElementById('clock');
+  if (P('reloj', '1') === '0') ck.remove(); else { const u = () => ck.textContent = clockStr(); u(); setInterval(u, 1000); }
+
+  const redes = PL('redes', []), rot = document.getElementById('rot'); let i = 0;
+  const next = () => { rot.classList.add('out'); setTimeout(() => { rot.textContent = '▸ ' + redes[i++ % redes.length]; rot.classList.remove('out'); }, 500); };
+  if (redes.length) { rot.textContent = '▸ ' + redes[i++]; setInterval(next, 6000); }
+</script>
+</body>
+</html>

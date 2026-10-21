@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Pausa — Vuelvo enseguida</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  PAUSA / BRB — pantalla completa
+  ?titulo=PAUSA TÁCTICA   ?motivo=Reabasteciendo munición
+-->
+<style>
+  .c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  .box { position: relative; padding: 70px 120px; }
+  .box .brackets { --b: 60px; --t: 5px; }
+  .k { font-family: var(--f-mono); font-size: 26px; letter-spacing: .4em; color: var(--acc); }
+  h1 { font-family: var(--f-head); font-size: 160px; line-height: 1; margin: 20px 0; text-transform: uppercase; }
+  .m { font-size: 42px; font-weight: 600; color: var(--khaki); }
+  .load { margin: 50px auto 0; width: 760px; height: 26px; border: 2px solid var(--acc); padding: 4px; }
+  .load i { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--acc) 0 22px, transparent 22px 30px);
+    animation: load 6s cubic-bezier(.6,0,.4,1) infinite; }
+  @keyframes load { 0% { width: 0 } 85%, 100% { width: 100% } }
+  .st { margin-top: 18px; display: flex; justify-content: space-between; width: 760px; margin-inline: auto; font-family: var(--f-mono); font-size: 22px; color: var(--muted); letter-spacing: .2em; }
+  .ammo { position: absolute; left: 50%; bottom: 80px; transform: translateX(-50%); display: flex; gap: 10px; }
+  .ammo b { width: 14px; height: 50px; background: linear-gradient(var(--khaki) 0 30%, #b58b2a 30%); border-radius: 7px 7px 2px 2px;
+    animation: ammo 2.4s infinite; opacity: .2; }
+  @keyframes ammo { 0%, 100% { opacity: .2 } 50% { opacity: 1 } }
+</style>
+</head>
+<body class="solid">
+<div class="photo-bg center"></div>
+<div class="noise"></div>
+<div class="vignette"></div>
+<div class="scanlines"></div>
+<div class="c">
+  <div class="box">
+    <div class="brackets"><i></i></div>
+    <div class="k"><span class="dot"></span>&nbsp; ПЕРЕРЫВ // TRANSMISIÓN EN ESPERA</div>
+    <h1 id="t">Pausa táctica</h1>
+    <div class="m" id="m">Reabasteciendo munición — vuelvo enseguida</div>
+    <div class="load"><i></i></div>
+    <div class="st"><span id="lbl">RECARGANDO</span><span>FUERA: <b id="tm">00:00</b></span></div>
+  </div>
+</div>
+<div class="ammo" id="ammo"></div>
+<script>
+  const t = P('titulo', ''); if (t) document.getElementById('t').textContent = t;
+  const m = P('motivo', ''); if (m) document.getElementById('m').textContent = m;
+  const am = document.getElementById('ammo');
+  for (let i = 0; i < 30; i++) am.insertAdjacentHTML('beforeend', `<b style="animation-delay:${i * .08}s"></b>`);
+  const t0 = Date.now();
+  setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); document.getElementById('tm').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
+  const lbls = ['RECARGANDO', 'LIMPIANDO EL ARMA', 'REVISANDO EL MAPA', 'ESPERANDO TRANSPORTE', 'CAFÉ DE CAMPAÑA'];
+  let i = 0; setInterval(() => scramble(document.getElementById('lbl'), lbls[++i % lbls.length], 500), 5000);
+</script>
+</body>
+</html>
