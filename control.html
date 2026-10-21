@@ -98,7 +98,7 @@
     if (ev === 'undo') { S.k = Math.max(0, S.k - 1); S.r = Math.max(0, S.r - 1); }
     if (ev === 'death') { S.d++; S.r = 0; }
     if (ev === 'reset') { if (!confirm('¿Reiniciar bajas y muertes a 0?')) return; S = { k: 0, d: 0, r: 0, best: 0 }; }
-    store.set('ar-bajas', S); bus.send({ t: 'bajas', ev }); renderB();
+    store.set('ar-bajas', S); bus.send({ t: 'bajas', ev, r: S.r }); renderB();
   }
   function renderB() {
     const S = store.get('ar-bajas', { k: 0, d: 0, r: 0, best: 0 });

@@ -113,12 +113,13 @@
 
   // Reproduce la animación de un evento (el estado ya está guardado)
   let kiaT;
-  function play(ev) {
+  // `streak`: la racha justo después de esta baja (con varias bajas seguidas el estado guardado ya va por delante)
+  function play(ev, streak) {
     S = store.get(KEY, S); render();
     if (ev === 'kill') {
       bump('ck'); bump('cr');
       chip(`+1 BAJA <small>${clockStr()}</small>`);
-      const r = S.r;
+      const r = streak ?? S.r;
       if (STREAK[r]) setTimeout(() => chip(`${STREAK[r]} <small>×${r}</small>`, 'streak'), 250);
     } else if (ev === 'undo') {
       bump('ck'); chip('−1 BAJA <small>CORREGIDO</small>', 'minus');
@@ -139,13 +140,13 @@
     if (ev === 'undo') { S.k = Math.max(0, S.k - 1); S.r = Math.max(0, S.r - 1); }
     if (ev === 'death') { S.d++; S.r = 0; }
     if (ev === 'reset') S = { k: 0, d: 0, r: 0, best: 0 };
-    store.set(KEY, S); bus.send({ t: 'bajas', ev }); play(ev);
+    store.set(KEY, S); bus.send({ t: 'bajas', ev, r: S.r }); play(ev, S.r);
   };
 
   $('ck').addEventListener('click', () => act('kill'));
   $('ck').addEventListener('contextmenu', e => { e.preventDefault(); act('undo'); });
   $('cd').addEventListener('click', () => act('death'));
-  bus.on(m => { if (m.t === 'bajas') play(m.ev); });
+  bus.on(m => { if (m.t === 'bajas') play(m.ev, m.r); });
   render();
 </script>
 </body>
