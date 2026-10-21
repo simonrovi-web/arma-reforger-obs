@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Marcos dinámicos</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  MARCOS DINÁMICOS — animados y conectados al contador de bajas y al objetivo.
+  Reaccionan solos a lo que pulses en control.html (o en bajas.html):
+    · baja        → destello dorado y "+1" en el marco
+    · K.I.A.      → el marco se pone rojo con "УБИТ" unos segundos
+    · objetivo    → el nuevo objetivo aparece en la pestaña del marco
+
+  ?estilo=juego    marco fino de pantalla completa para el gameplay (por defecto)
+  ?estilo=camara   marco de webcam con borde que recorre el contorno
+  ?estilo=camo     marco de webcam con borde de camuflaje digital
+  ?estilo=chat     caja alta para el chat ("РАЦИЯ")
+
+  ?x= ?y= ?w= ?h=  posición y tamaño del hueco (camara, camo, chat)
+  ?label=TEXTO     texto de la pestaña
+  ?alerta=1        borde rojo latiendo todo el rato (momentos de tensión)
+  ?eventos=0       no reaccionar a bajas ni objetivos
+-->
+<style>
+  .fr { position: absolute; --c: var(--acc); container-type: inline-size; }
+  .fr.kia { --c: var(--red); }
+  .fr.gold { --c: var(--gold); }
+  .fr .edge { position: absolute; inset: 0; border: 1px solid var(--line); transition: border-color .3s; }
+  .fr.kia .edge, .fr.alert .edge { border-color: var(--red); }
+
+  /* Trazo que recorre el contorno (SVG con pathLength=100, se adapta a cualquier tamaño) */
+  .fr svg.trace { position: absolute; inset: -1px; width: calc(100% + 2px); height: calc(100% + 2px); overflow: visible; pointer-events: none; }
+  .fr svg.trace rect { fill: none; stroke: var(--c); stroke-width: 3; stroke-dasharray: 9 41; animation: trace 6s linear infinite; transition: stroke .3s;
+    filter: drop-shadow(0 0 6px var(--c)); }
+  @keyframes trace { to { stroke-dashoffset: -100; } }
+
+  /* Esquinas que respiran */
+  .fr .brackets { --b: 36px; --t: 4px; --c: inherit; inset: -10px; animation: breathe 3s ease-in-out infinite; }
+  .fr .brackets::before, .fr .brackets::after, .fr .brackets > i::before, .fr .brackets > i::after { border-color: var(--c); transition: border-color .3s; }
+  @keyframes breathe { 50% { inset: -16px; } }
+
+  /* Línea de barrido */
+  .fr .scan { position: absolute; left: 0; right: 0; height: 2px; top: 0; background: linear-gradient(90deg, transparent, var(--c), transparent);
+    opacity: .35; animation: scan 4s linear infinite; }
+  @keyframes scan { to { top: 100%; } }
+
+  /* Pestaña superior */
+  .fr .tab { position: absolute; left: -10px; bottom: calc(100% + 14px); display: flex; align-items: stretch; height: 38px; max-width: calc(100% + 20px);
+    font-family: var(--f-mono); font-size: 18px; letter-spacing: .14em; white-space: nowrap; }
+  .fr .tab b { display: flex; align-items: center; gap: 8px; padding: 0 14px; background: var(--c); color: var(--on-acc); font-weight: 400; transition: background .3s; }
+  .fr .tab b .dot { width: 9px; height: 9px; background: var(--on-acc); box-shadow: none; }
+  .fr .tab span { display: flex; align-items: center; padding: 0 14px; background: rgba(11,16,12,.9); color: var(--khaki); overflow: hidden; text-overflow: ellipsis; border: 1px solid var(--line); border-left: 0; }
+  .fr .tab span.hot { color: var(--txt); }
+
+  /* Pie con telemetría */
+  .fr .foot { position: absolute; left: 0; right: 0; top: calc(100% + 10px); display: flex; justify-content: space-between;
+    font-family: var(--f-mono); font-size: 15px; letter-spacing: .12em; color: var(--khaki); text-shadow: 0 1px 3px #000; }
+  .fr .foot i { font-style: normal; color: var(--c); }
+
+  /* Mensaje grande dentro del marco (+1 / УБИТ) */
+  .fr .msg { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; font-family: var(--f-head);
+    font-size: clamp(28px, 9cqw, 110px); color: var(--c); text-shadow: 0 0 24px var(--c); opacity: 0; }
+  .fr .msg.go { animation: msg 1.4s ease-out; }
+  .fr.kia .msg.go { animation: msgk 3s steps(1, end); }
+  @keyframes msg { 0% { opacity: 0; transform: scale(1.6) } 15% { opacity: 1; transform: scale(1) } 70% { opacity: 1 } 100% { opacity: 0; transform: translateY(-20px) } }
+  @keyframes msgk { 0%, 10%, 20%, 30% { opacity: 1 } 5%, 15%, 25% { opacity: .3 } 31%, 95% { opacity: 1 } 100% { opacity: 0 } }
+
+  /* Tinte y alerta */
+  .fr .tint { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 0 transparent; transition: box-shadow .3s; }
+  .fr.kia .tint, .fr.alert .tint { animation: pulse 1s ease-in-out infinite; }
+  .fr.gold .tint { box-shadow: inset 0 0 60px 6px color-mix(in srgb, var(--gold) 60%, transparent); }
+  @keyframes pulse { 50% { box-shadow: inset 0 0 70px 10px rgba(224,64,44,.55); } }
+
+  /* ---- Estilo CAMO: borde de camuflaje digital ---- */
+  /* Solo el borde: la máscara recorta el hueco del contenido */
+  .fr.camof .edge { inset: -16px; border: 0; padding: 16px; background: var(--camo) 0 0 / 96px 96px;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; }
+  .fr.camof .edge::after { content: ''; position: absolute; inset: -16px; border: 2px solid var(--c); transition: border-color .3s; }
+  .fr.camof .brackets { inset: -26px; }
+  .fr.camof .star-c { position: absolute; width: 22px; height: 22px; background: var(--gold);
+    clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  .fr.camof .tab { bottom: calc(100% + 26px); }
+  .fr.camof .foot { top: calc(100% + 24px); }
+
+  /* ---- Estilo JUEGO: pantalla completa ---- */
+  .game { position: absolute; inset: 18px; }
+  .game .edge { border-color: rgba(184,192,160,.18); }
+  .game .brackets { --b: 70px; --t: 3px; inset: 0; animation: none; }
+  .tape { position: absolute; left: 50%; top: 8px; width: 520px; height: 34px; margin-left: -260px; overflow: hidden;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent); }
+  .tape .strip { position: absolute; top: 0; height: 100%; white-space: nowrap; font-family: var(--f-mono); font-size: 15px; color: var(--khaki);
+    display: flex; align-items: flex-end; transition: transform 1.2s cubic-bezier(.4,0,.2,1); }
+  .tape .strip span { width: 52px; text-align: center; border-left: 1px solid var(--line); padding-bottom: 2px; }
+  .tape .strip span.n { color: var(--acc); }
+  .tape::after { content: ''; position: absolute; left: 50%; top: 0; width: 2px; height: 12px; margin-left: -1px; background: var(--acc); }
+  .ruler { position: absolute; top: 50%; width: 14px; height: 320px; margin-top: -160px;
+    background: repeating-linear-gradient(transparent 0 19px, var(--line) 19px 20px); }
+  .ruler.l { left: 6px; } .ruler.r { right: 6px; }
+  .ruler::after { content: ''; position: absolute; left: 0; right: 0; height: 3px; background: var(--c); top: var(--p, 50%); transition: top 1.5s; }
+  .corner { position: absolute; font-family: var(--f-mono); font-size: 16px; letter-spacing: .14em; color: var(--khaki); text-shadow: 0 1px 3px #000; }
+  .corner.tl { left: 26px; top: 18px; } .corner.tr { right: 26px; top: 18px; text-align: right; }
+  .corner.bl { left: 26px; bottom: 16px; } .corner.br { right: 26px; bottom: 16px; text-align: right; }
+  .corner b { color: var(--c); font-weight: 400; }
+  .game .msg { font-size: 160px; }
+
+  .in { opacity: 0; animation: fin .7s .1s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes fin { from { opacity: 0; transform: scale(.97) } to { opacity: 1; transform: none } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  const estilo = P('estilo', 'juego');
+  const root = document.getElementById('root');
+  const trace = '<svg class="trace" preserveAspectRatio="none"><rect x="0" y="0" width="100%" height="100%" pathLength="100"/></svg>';
+  const LABELS = { camara: 'КАМЕРА // OPERADOR', camo: 'ОПЕРАТОР // CÁMARA', chat: 'РАЦИЯ // CHAT' };
+  const DEF = { camara: [1396, 690, 480, 270], camo: [1380, 680, 480, 270], chat: [1480, 170, 400, 520] };
+
+  let fr, label;
+  if (estilo === 'juego') {
+    root.innerHTML = `<div class="game fr in" id="fr">
+        <div class="edge"></div><div class="brackets"><i></i></div><div class="tint"></div>
+        <div class="tape"><div class="strip" id="strip"></div></div>
+        <div class="ruler l" id="rl"></div><div class="ruler r" id="rr"></div>
+        <div class="corner tl"><i class="star"></i> <span data-cfg="canal"></span><br><span class="ru" id="lbl">${P('label', 'В ЭФИРЕ // EN VIVO')}</span></div>
+        <div class="corner tr">КВАДРАТ <b id="grid">047-112</b><br>АЗИМУТ <b id="az">274°</b></div>
+        <div class="corner bl"><span class="dot" style="width:10px;height:10px"></span> REC <b class="ck"></b></div>
+        <div class="corner br">СВЯЗЬ <b id="sig">▮▮▮▮▯</b><br><span data-cfg="lemaRu"></span></div>
+        <div class="msg" id="msg"></div></div>`;
+    // Cinta de rumbo: grados cada 15°, se desplaza hacia el azimut actual
+    const strip = document.getElementById('strip'), marks = [];
+    for (let d = -180; d <= 540; d += 15) { const v = (d + 360) % 360; marks.push(`<span class="${v % 90 === 0 ? 'n' : ''}">${({ 0: 'С', 90: 'В', 180: 'Ю', 270: 'З' })[v] ?? v}</span>`); }
+    strip.innerHTML = marks.join('');
+    window.setHeading = (deg) => { strip.style.transform = `translateX(${260 - 26 - ((deg + 180) / 15) * 52}px)`; document.getElementById('az').textContent = String(Math.round(deg)).padStart(3, '0') + '°'; };
+  } else {
+    const [dx, dy, dw, dh] = DEF[estilo] || DEF.camara;
+    const x = PN('x', dx), y = PN('y', dy), w = PN('w', dw), h = PN('h', dh);
+    const camo = estilo === 'camo';
+    root.innerHTML = `<div class="fr in ${camo ? 'camof' : ''}" id="fr" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">
+        <div class="edge"></div>${camo ? '' : trace}<div class="brackets"><i></i></div><div class="tint"></div>
+        ${estilo === 'chat' ? '' : '<div class="scan"></div>'}
+        ${camo ? ['-30px;left:-30px', '-30px;right:-30px', 'auto;bottom:-30px;left:-30px', 'auto;bottom:-30px;right:-30px'].map((p) => `<i class="star-c" style="top:${p}"></i>`).join('') : ''}
+        <div class="tab"><b><i class="dot"></i>${estilo === 'chat' ? 'ЭФИР' : 'REC'}</b><span id="lbl">${P('label', LABELS[estilo] || LABELS.camara)}</span></div>
+        <div class="foot"><span>КВАДРАТ <i id="grid">047-112</i></span><span>АЗИМУТ <i id="az">274°</i></span><span><i class="ck"></i></span></div>
+        <div class="msg" id="msg"></div></div>`;
+    window.setHeading = (deg) => { document.getElementById('az').textContent = String(Math.round(deg)).padStart(3, '0') + '°'; };
+  }
+  fr = document.getElementById('fr');
+  label = document.getElementById('lbl');
+  const baseLabel = label.textContent;
+  if (P('alerta', '0') === '1') fr.classList.add('alert');
+
+  // Telemetría que se mueve sola: reloj, rumbo, cuadrícula y señal
+  const ck = () => document.querySelectorAll('.ck').forEach((e) => (e.textContent = clockStr()));
+  ck(); setInterval(ck, 1000);
+  let heading = 274;
+  setHeading(heading);
+  setInterval(() => { heading = (heading + (Math.random() * 40 - 20) + 360) % 360; setHeading(heading); }, 3500);
+  const g = document.getElementById('grid');
+  setInterval(() => { const n = (s) => String(Math.max(0, Math.min(999, s + Math.round(Math.random() * 2 - 1)))).padStart(3, '0'); const [a, b] = g.textContent.split('-').map(Number); g.textContent = `${n(a)}-${n(b)}`; }, 6000);
+  const sig = document.getElementById('sig'), bars = ['▮▮▮▮▯', '▮▮▮▯▯', '▮▮▮▮▮', '▮▮▮▮▯'];
+  if (sig) { let i = 0; setInterval(() => (sig.textContent = bars[i++ % 4]), 1900); }
+  ['rl', 'rr'].forEach((id) => { const r = document.getElementById(id); if (r) setInterval(() => r.style.setProperty('--p', `${20 + Math.random() * 60}%`), 2300); });
+
+  // Reacciones a bajas, K.I.A. y objetivos (desde control.html o bajas.html)
+  const msg = document.getElementById('msg');
+  let stateT, labelT;
+  const flash = (cls, text, ms) => {
+    clearTimeout(stateT);
+    fr.classList.remove('gold', 'kia'); void fr.offsetWidth; fr.classList.add(cls);
+    msg.textContent = text; msg.classList.remove('go'); void msg.offsetWidth; msg.classList.add('go');
+    stateT = setTimeout(() => fr.classList.remove(cls), ms);
+  };
+  const showLabel = (text, ms) => {
+    clearTimeout(labelT);
+    scramble(label, text, 600); label.classList.add('hot');
+    labelT = setTimeout(() => { scramble(label, baseLabel, 500); label.classList.remove('hot'); }, ms);
+  };
+  if (P('eventos', '1') !== '0') {
+    bus.on((m) => {
+      if (m.t === 'bajas' && m.ev === 'kill') flash('gold', m.r > 1 ? `+1 ×${m.r}` : '+1', 1400);
+      if (m.t === 'bajas' && m.ev === 'death') flash('kia', 'УБИТ', 3200);
+      if (m.t === 'obj') {
+        const o = store.get('ar-obj', null);
+        if (!o || o.estado === 'oculto') return;
+        const pre = { nuevo: 'ЗАДАЧА', cumplido: 'ВЫПОЛНЕНО', fallido: 'ПРОВАЛ' }[o.estado] || 'ЗАДАЧА';
+        showLabel(`${pre}: ${String(o.obj).toUpperCase()}`, 9000);
+        if (o.estado === 'cumplido') flash('gold', '✓', 1400);
+      }
+    });
+  }
+</script>
+</body>
+</html>

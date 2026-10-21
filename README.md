@@ -37,6 +37,7 @@ Edita [`js/config.js`](js/config.js): nombre del canal, lema, redes, color de ac
 | `gc.html` | Rótulos: persona, ubicación, tema |
 | `mosca.html` | Logo de esquina con EN VIVO y reloj |
 | `pip.html` | Marco de cámara (`?modo=casco`, `?layout=dual`) |
+| `marcos.html` | Marcos dinámicos: `?estilo=juego`, `camara`, `camo` o `chat`. Reaccionan a bajas, K.I.A. y objetivos del panel |
 | `marcador.html` | USSR vs US, puntos y bases (interactivo) |
 | `escuadra.html` | Roster del отделение (interactivo) |
 | `bajas.html` | Contador de bajas, rachas y pantalla K.I.A. |
