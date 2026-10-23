@@ -26,7 +26,7 @@
   .play .scan { animation: scan 2s linear both; }
   @keyframes scan { 0%, 30% { top: -10px; opacity: 0 } 31% { opacity: 1 } 55% { top: 1090px; opacity: 1 } 56%, 100% { opacity: 0 } }
 
-  .badge { position: absolute; left: 50%; top: 50%; width: 760px; margin-left: -380px; transform: translateY(-50%); text-align: center; opacity: 0; }
+  .badge { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; opacity: 0; }
   .badge .plate { display: inline-flex; flex-direction: column; align-items: center; padding: 34px 70px 30px; background: rgba(11,16,12,.92);
     border: 3px solid var(--gold); outline: 1px solid rgba(214,169,58,.4); outline-offset: 8px; }
   .badge .star { font-size: 90px; }
@@ -44,7 +44,7 @@
 <div class="stage play" id="stage">
   <div class="grid" id="grid"></div>
   <div class="scan"></div>
-  <div class="badge"><div class="plate"><i class="star"></i><div class="n" data-cfg="canal">TU CANAL</div><div class="r" data-cfg="lemaRu">ВООРУЖЁННЫЕ СИЛЫ</div></div></div>
+  <div class="badge"><div class="plate"><i class="star"></i><div class="n" data-cfg="canal">FUERZAS RUSAS</div><div class="r" data-cfg="lemaRu">ВООРУЖЁННЫЕ СИЛЫ</div></div></div>
 </div>
 <script>
   // Orden "aleatorio" fijo (semilla), así el vídeo sale igual cada vez que se renderiza

@@ -3,8 +3,8 @@
 //  Todo se puede sobrescribir por URL: archivo.html?canal=XYZ
 // ============================================================
 window.CFG = {
-  canal: "TU CANAL",              // nombre que aparece en stinger, mosca, intro...
-  lema: "FUERZAS RUSAS",          // subtítulo
+  canal: "FUERZAS RUSAS",         // nombre que aparece en stinger, mosca, intro...
+  lema: "ARMA REFORGER",          // subtítulo
   lemaRu: "ВООРУЖЁННЫЕ СИЛЫ",     // línea en cirílico que acompaña al lema
   servidor: "[ES] Conflict — Everon",
   mapa: "EVERON",
