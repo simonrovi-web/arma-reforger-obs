@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="stinger" content="2000 1000">
+<title>Stinger — Camuflaje digital</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  STINGER "CAMUFLAJE DIGITAL" — 2.0 s, punto de transición 1000 ms
+  Bloques de camuflaje que tapan la pantalla en orden aleatorio, escudo con
+  estrella y lema, y los bloques se van en otro orden.
+  ?loop=1 para previsualizar · vídeo: render/stinger-camo.webm
+-->
+<style>
+  .stage { position: absolute; inset: 0; overflow: hidden; }
+  .grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(16, 120px); grid-template-rows: repeat(9, 120px); }
+  .cell { background: var(--camo) var(--bx) var(--by) / 128px 128px, var(--olive); transform: scale(0); }
+  .cell.t1 { filter: brightness(.75); } .cell.t2 { filter: brightness(1.12) saturate(.9); }
+  .play .cell { animation: cin .22s var(--d1) cubic-bezier(.3,1.5,.5,1) both, cout .2s var(--d2) cubic-bezier(.6,0,.9,.4) forwards; }
+  @keyframes cin { from { transform: scale(0) } to { transform: scale(1.02) } }
+  @keyframes cout { from { transform: scale(1.02) } to { transform: scale(0) } }
+
+  .scan { position: absolute; left: 0; right: 0; height: 6px; background: var(--acc); box-shadow: 0 0 30px 6px rgba(200,48,42,.7); opacity: 0; }
+  .play .scan { animation: scan 2s linear both; }
+  @keyframes scan { 0%, 30% { top: -10px; opacity: 0 } 31% { opacity: 1 } 55% { top: 1090px; opacity: 1 } 56%, 100% { opacity: 0 } }
+
+  .badge { position: absolute; left: 50%; top: 50%; width: 760px; margin-left: -380px; transform: translateY(-50%); text-align: center; opacity: 0; }
+  .badge .plate { display: inline-flex; flex-direction: column; align-items: center; padding: 34px 70px 30px; background: rgba(11,16,12,.92);
+    border: 3px solid var(--gold); outline: 1px solid rgba(214,169,58,.4); outline-offset: 8px; }
+  .badge .star { font-size: 90px; }
+  .badge .n { font-family: var(--f-head); font-size: 84px; line-height: 1; margin-top: 14px; color: var(--txt); }
+  .badge .r { font-family: var(--f-mono); font-size: 24px; letter-spacing: .5em; color: var(--gold); margin-top: 14px; padding-left: .5em; }
+  .play .badge { animation: badge 2s both; }
+  @keyframes badge {
+    0%, 32% { opacity: 0; transform: translateY(-50%) scale(1.4); animation-timing-function: cubic-bezier(.2,1.3,.4,1); }
+    42%, 54% { opacity: 1; transform: translateY(-50%) scale(1); }
+    60%, 100% { opacity: 0; transform: translateY(-50%) scale(.9); }
+  }
+</style>
+</head>
+<body>
+<div class="stage play" id="stage">
+  <div class="grid" id="grid"></div>
+  <div class="scan"></div>
+  <div class="badge"><div class="plate"><i class="star"></i><div class="n" data-cfg="canal">TU CANAL</div><div class="r" data-cfg="lemaRu">ВООРУЖЁННЫЕ СИЛЫ</div></div></div>
+</div>
+<script>
+  // Orden "aleatorio" fijo (semilla), así el vídeo sale igual cada vez que se renderiza
+  let seed = 1989; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const cells = [];
+  for (let i = 0; i < 16 * 9; i++) {
+    const x = i % 16, y = Math.floor(i / 16);
+    // Entra en diagonal desde la esquina con algo de ruido; sale en orden inverso
+    const k = (x / 15 + y / 8) / 2;
+    const d1 = (k * 0.42 + rnd() * 0.16).toFixed(3);
+    const d2 = (1.2 + (1 - k) * 0.42 + rnd() * 0.16).toFixed(3);
+    cells.push(`<i class="cell t${Math.floor(rnd() * 3)}" style="--d1:${d1}s;--d2:${d2}s;--bx:${-x * 120 % 128}px;--by:${-y * 120 % 128}px"></i>`);
+  }
+  document.getElementById('grid').innerHTML = cells.join('');
+  stingerLoop();
+</script>
+</body>
+</html>

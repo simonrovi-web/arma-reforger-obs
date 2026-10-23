@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="stinger" content="2200 1050">
+<title>Stinger — Compuerta blindada</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  STINGER "COMPUERTA BLINDADA" — 2.2 s, punto de transición 1050 ms
+  Dos hojas de acero con remaches se cierran de golpe (con temblor), aparece el
+  sello con la estrella y "ДОСТУП РАЗРЕШЁН", el sello gira y la compuerta se abre.
+  ?loop=1 para previsualizar · vídeo: render/stinger-blindaje.webm
+-->
+<style>
+  .stage { position: absolute; inset: 0; overflow: hidden; }
+  .shake { position: absolute; inset: 0; }
+  .play .shake { animation: shake 2.2s both; }
+  @keyframes shake { 0%, 24% { transform: none } 26% { transform: translate(0, 14px) } 28% { transform: translate(-6px, -8px) } 30% { transform: translate(5px, 4px) } 32% { transform: translate(-2px, -2px) } 34%, 100% { transform: none } }
+
+  /* Las hojas sobresalen 40 px por fuera para que el temblor no abra rendijas en los bordes */
+  .door { position: absolute; left: -40px; right: -40px; height: calc(50% + 40px);
+    background:
+      radial-gradient(circle, #8a8f86 0 3px, #2a2e29 4px 5px, transparent 6px) 30px 30px / 120px 120px,
+      repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 2px, transparent 2px 6px),
+      linear-gradient(180deg, #3d443a, #252a23 60%, #1b1f1a); }
+  .door::before { content: ''; position: absolute; left: 0; right: 0; height: 34px; background: repeating-linear-gradient(-45deg, var(--acc) 0 26px, #0b100c 26px 52px); }
+  .door::after { content: ''; position: absolute; left: 60px; right: 60px; height: 60%; top: 20%; border: 3px solid rgba(0,0,0,.45); box-shadow: inset 0 0 0 2px rgba(255,255,255,.05); }
+  .top { top: -40px; transform: translateY(-101%); }
+  .top::before { bottom: 0; }
+  .bot { bottom: -40px; transform: translateY(101%); }
+  .bot::before { top: 0; }
+  .play .top { animation: top 2.2s both; }
+  .play .bot { animation: bot 2.2s both; }
+  @keyframes top { 0%, 4% { transform: translateY(-101%); animation-timing-function: cubic-bezier(.55,0,1,.45); } 25% { transform: translateY(0); } 27% { transform: translateY(-1.5%); } 29%, 66% { transform: translateY(0); animation-timing-function: cubic-bezier(.7,0,.3,1); } 88%, 100% { transform: translateY(-101%); } }
+  @keyframes bot { 0%, 4% { transform: translateY(101%); animation-timing-function: cubic-bezier(.55,0,1,.45); } 25% { transform: translateY(0); } 27% { transform: translateY(1.5%); } 29%, 66% { transform: translateY(0); animation-timing-function: cubic-bezier(.7,0,.3,1); } 88%, 100% { transform: translateY(101%); } }
+
+  .sparks { position: absolute; left: 0; right: 0; top: 50%; height: 4px; margin-top: -2px; background: linear-gradient(90deg, transparent, #ffd28a, #fff, #ffd28a, transparent); opacity: 0; filter: blur(1px); box-shadow: 0 0 40px 10px rgba(255,180,80,.6); }
+  .play .sparks { animation: sparks 2.2s both; }
+  @keyframes sparks { 0%, 24% { opacity: 0; transform: scaleX(.2) } 25.5% { opacity: 1; transform: scaleX(1) } 34%, 100% { opacity: 0; transform: scaleX(1.2) } }
+
+  .seal { position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px; border-radius: 50%; opacity: 0;
+    background: radial-gradient(circle, #2c322a 0 52%, #4c5547 53% 56%, #1d211c 57% 70%, #6a7262 71% 73%, #2a2f28 74%);
+    box-shadow: 0 10px 40px rgba(0,0,0,.7), inset 0 0 0 6px #14170f; display: grid; place-items: center; }
+  .seal .star { font-size: 120px; }
+  .seal .ring { position: absolute; inset: 14px; border-radius: 50%; border: 4px dashed rgba(214,169,58,.55); }
+  .play .seal { animation: seal 2.2s both; }
+  @keyframes seal { 0%, 27% { opacity: 0; transform: scale(.4) } 33% { opacity: 1; transform: scale(1.08) } 36%, 56% { opacity: 1; transform: scale(1) rotate(0) } 64% { opacity: 1; transform: scale(1) rotate(90deg) } 68%, 100% { opacity: 0; transform: scale(.85) rotate(90deg) } }
+
+  .access { position: absolute; left: 50%; top: calc(50% + 190px); transform: translateX(-50%); padding: 10px 30px; white-space: nowrap;
+    background: #0b100c; border: 2px solid #6fcf4a; color: #6fcf4a; font-family: var(--f-mono); font-size: 30px; letter-spacing: .3em; opacity: 0;
+    text-shadow: 0 0 12px rgba(111,207,74,.6); }
+  .access small { display: block; font-size: 16px; letter-spacing: .25em; color: var(--khaki); text-align: center; text-shadow: none; }
+  .play .access { animation: access 2.2s steps(1, end) both; }
+  @keyframes access { 0%, 38% { opacity: 0 } 40% { opacity: 1 } 42% { opacity: 0 } 44%, 62% { opacity: 1 } 64%, 100% { opacity: 0 } }
+
+  .name { position: absolute; left: 50%; top: calc(50% - 250px); transform: translateX(-50%); font-family: var(--f-head); font-size: 56px; color: var(--txt);
+    text-shadow: 0 3px 0 #000; opacity: 0; white-space: nowrap; }
+  .play .name { animation: name 2.2s both; }
+  @keyframes name { 0%, 33% { opacity: 0; transform: translate(-50%, -14px) } 40%, 60% { opacity: 1; transform: translate(-50%, 0) } 66%, 100% { opacity: 0 } }
+</style>
+</head>
+<body>
+<div class="stage play" id="stage">
+  <div class="shake">
+    <div class="door top"></div>
+    <div class="door bot"></div>
+    <div class="sparks"></div>
+    <div class="name" data-cfg="canal">TU CANAL</div>
+    <div class="seal"><div class="ring"></div><i class="star"></i></div>
+    <div class="access">ДОСТУП РАЗРЕШЁН<small>ACCESO AUTORIZADO</small></div>
+  </div>
+</div>
+<script>stingerLoop();</script>
+</body>
+</html>

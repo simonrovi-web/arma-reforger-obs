@@ -58,7 +58,11 @@
 
 <script>
   const A = [
-    ['g1', 'stinger.html', 'Stinger', 'Barrido con camuflaje digital y estrella roja. 2 s, corte a 1000 ms.', 'stinger.html?loop=1'],
+    ['g1', 'stinger.html', 'Stinger barrido', 'Barras diagonales con camuflaje digital y estrella roja. 2 s, corte a 1000 ms.', 'stinger.html?loop=1'],
+    ['g1', 'stinger-estrella.html', 'Stinger estrella roja', 'Círculos rojos, rayos de cartel soviético y estrella que sale hacia la cámara. 2 s, corte a 1000 ms.', 'stinger-estrella.html?loop=1'],
+    ['g1', 'stinger-camo.html', 'Stinger camuflaje', 'Bloques de camuflaje digital que tapan la pantalla, con escudo y barrido rojo. 2 s, corte a 1000 ms.', 'stinger-camo.html?loop=1'],
+    ['g1', 'stinger-blindaje.html', 'Stinger compuerta blindada', 'Compuerta de acero que se cierra de golpe, sello con estrella y «ДОСТУП РАЗРЕШЁН». 2,2 s, corte a 1050 ms.', 'stinger-blindaje.html?loop=1'],
+    ['g1', 'stinger-mira.html', 'Stinger mira PSO-1', 'Mira telescópica con retícula PSO-1 que se cierra a negro: «ЦЕЛЬ ЗАХВАЧЕНА». 2 s, corte a 1000 ms.', 'stinger-mira.html?loop=1'],
     ['g1', 'intro.html', 'Intro', 'Empezamos pronto: cuenta atrás, radar, briefing y SITREP.', 'intro.html?min=5&operacion=AMANECER ROJO'],
     ['g1', 'pausa.html', 'Pausa', 'BRB "Pausa táctica" con contador de tiempo fuera.', 'pausa.html'],
     ['g1', 'final.html', 'Final', 'Misión cumplida, estadísticas, créditos y redes.', 'final.html?bajas=24&objetivos=5&tiempo=3h 12m&proximo=Viernes 21:00'],
@@ -84,7 +88,9 @@
     document.getElementById(g).insertAdjacentHTML('beforeend', `<div class="card">
       <div class="thumb"><iframe loading="lazy" src="${demo}${demo.includes('?') ? '&' : '?'}preview=1"></iframe></div>
       <div class="meta"><h3>${n}<code>${f}</code></h3><p>${d}</p>
-      <div class="btns"><a href="${demo}" target="_blank">Abrir</a><button data-u="${base + demo}">Copiar URL para OBS</button></div></div></div>`);
+      <div class="btns"><a href="${demo}" target="_blank">Abrir</a>${f.startsWith('stinger')
+        ? `<a href="render/${f.replace('.html', '.webm')}" download>Descargar .webm para OBS</a>`
+        : `<button data-u="${base + demo}">Copiar URL para OBS</button>`}</div></div></div>`);
   }
   const fit = () => document.querySelectorAll('.thumb').forEach(t => t.firstElementChild.style.transform = `scale(${t.clientWidth / 1920})`);
   addEventListener('resize', fit); fit();

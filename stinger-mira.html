@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="stinger" content="2000 1000">
+<title>Stinger — Mira PSO-1</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  STINGER "MIRA PSO-1" — 2.0 s, punto de transición 1000 ms
+  La imagen se ve a través de una mira telescópica (retícula PSO-1 con chevrones y
+  telémetro) que se cierra hasta negro; "ЦЕЛЬ ЗАХВАЧЕНА" y la mira se vuelve a abrir.
+  ?loop=1 para previsualizar · vídeo: render/stinger-mira.webm
+-->
+<style>
+  /* Radio del agujero de la mira, animable */
+  @property --r { syntax: '<length>'; inherits: true; initial-value: 1400px; }
+  .stage { position: absolute; inset: 0; overflow: hidden; --r: 1400px; }
+  .play { animation: radius 2s both; }
+  @keyframes radius {
+    0%, 6% { --r: 1400px; animation-timing-function: cubic-bezier(.6,0,.4,1); }
+    24% { --r: 430px; animation-timing-function: linear; }
+    32% { --r: 400px; animation-timing-function: cubic-bezier(.7,0,.9,.4); }
+    42%, 62% { --r: 0px; animation-timing-function: cubic-bezier(.2,.6,.3,1); }
+    94%, 100% { --r: 1400px; }
+  }
+
+  .black { position: absolute; inset: 0; background: #050705;
+    mask: radial-gradient(circle var(--r) at 50% 50%, transparent calc(100% - 1px), #000 100%); }
+  /* Sombra interior del tubo */
+  .tube { position: absolute; left: 50%; top: 50%; width: calc(var(--r) * 2); height: calc(var(--r) * 2); transform: translate(-50%, -50%);
+    border-radius: 50%; box-shadow: inset 0 0 calc(var(--r) * .35) calc(var(--r) * .08) rgba(0,0,0,.85), 0 0 0 6px #111; pointer-events: none; }
+  .reticle { position: absolute; left: 50%; top: 50%; width: calc(var(--r) * 2); height: calc(var(--r) * 2); transform: translate(-50%, -50%); }
+  .reticle svg { width: 100%; height: 100%; overflow: visible; }
+  /* La retícula solo se ve mientras la mira está cerrándose, no a pantalla completa */
+  .reticle, .tube, .tint { opacity: 0; }
+  .play .reticle, .play .tube, .play .tint { animation: scope 2s both; }
+  @keyframes scope { 0%, 7% { opacity: 0 } 16%, 40% { opacity: 1 } 64% { opacity: 1 } 80%, 100% { opacity: 0 } }
+  .tint { position: absolute; inset: 0; background: radial-gradient(circle var(--r) at 50% 50%, rgba(255,140,60,.10), rgba(0,0,0,0) 70%); }
+
+  .lock { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; opacity: 0; }
+  .lock .a { font-family: var(--f-mono); font-size: 34px; letter-spacing: .5em; color: var(--acc); padding-left: .5em; text-shadow: 0 0 18px rgba(200,48,42,.8); }
+  .lock .n { font-family: var(--f-head); font-size: 110px; line-height: 1.05; color: var(--txt); margin-top: 10px; }
+  .lock .s { font-family: var(--f-mono); font-size: 22px; letter-spacing: .35em; color: var(--khaki); margin-top: 14px; }
+  .play .lock { animation: lock 2s both; }
+  @keyframes lock { 0%, 40% { opacity: 0; letter-spacing: .2em; } 41% { opacity: 1 } 43% { opacity: .2 } 45%, 60% { opacity: 1; } 64%, 100% { opacity: 0; } }
+
+  .dist { position: absolute; left: 50%; top: 50%; margin: 60px 0 0 90px; font-family: var(--f-mono); font-size: 20px; color: var(--acc); opacity: 0; }
+  .play .dist { animation: dist 2s both; }
+  @keyframes dist { 0%, 8% { opacity: 0 } 12%, 34% { opacity: 1 } 38%, 100% { opacity: 0 } }
+</style>
+</head>
+<body>
+<div class="stage play" id="stage">
+  <div class="tint"></div>
+  <div class="reticle">
+    <!-- Retícula tipo PSO-1: chevrones de puntería, hilo horizontal graduado y telémetro -->
+    <svg viewBox="-100 -100 200 200" fill="none" stroke="#c8302a" stroke-width=".8" stroke-linecap="round">
+      <path d="M-6 6 L0 0 L6 6" stroke-width="1.4"/>
+      <path d="M-4 18 L0 14 L4 18 M-3.4 28 L0 24.6 L3.4 28 M-3 37 L0 34 L3 37" />
+      <path d="M-70 0 H-12 M12 0 H70" />
+      <path d="M-60 -2.5 V2.5 M-50 -2 V2 M-40 -2.5 V2.5 M-30 -2 V2 M-20 -2.5 V2.5 M20 -2.5 V2.5 M30 -2 V2 M40 -2.5 V2.5 M50 -2 V2 M60 -2.5 V2.5" />
+      <path d="M0 40 V70" />
+      <path d="M-75 -28 Q-60 -40 -38 -46" stroke-dasharray="1 2" />
+      <text x="-74" y="-31" fill="#c8302a" stroke="none" font-size="5" font-family="PT Mono, monospace">2  4  6  8  10</text>
+      <circle r="96" stroke="#111" stroke-width="6" />
+    </svg>
+  </div>
+  <div class="tube"></div>
+  <div class="dist">ДАЛЬНОСТЬ 0400 м<br>ВЕТЕР 3 м/с</div>
+  <div class="black"></div>
+  <div class="lock">
+    <div class="a">ЦЕЛЬ ЗАХВАЧЕНА</div>
+    <div class="n" data-cfg="canal">TU CANAL</div>
+    <div class="s">OBJETIVO FIJADO // <span data-cfg="lemaRu"></span></div>
+  </div>
+</div>
+<script>stingerLoop();</script>
+</body>
+</html>

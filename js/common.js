@@ -11,6 +11,9 @@
   // Color de acento
   const ac = String(P('acento', 'f2a900')).replace('#', '');
   if (/^[0-9a-f]{3,8}$/i.test(ac)) document.documentElement.style.setProperty('--acc', '#' + ac);
+  // Las url() de variables CSS se resuelven contra la página que las usa, no contra theme.css:
+  // con file:// "../img" apuntaría fuera del paquete, así que se fija la ruta completa.
+  document.documentElement.style.setProperty('--camo', `url('${new URL('img/camo.svg', location.href).href}')`);
   const fondo = P('fondo', '');
   if (fondo) document.documentElement.style.setProperty('--foto', `url('${new URL(fondo, location.href).href}')`);
 
@@ -52,6 +55,14 @@
     send(msg) { try { localStorage.setItem('ar-bus', JSON.stringify({ ...msg, ts: Date.now() + Math.random() })); } catch (e) {} },
     on(fn) { addEventListener('storage', e => { if (e.key === 'ar-bus' && e.newValue) { try { fn(JSON.parse(e.newValue)); } catch (er) {} } }); }
   };
+  // Stingers: con ?loop=1 repiten su animación (clase .play en #stage) para previsualizarlos.
+  window.stingerLoop = () => {
+    if (!Q.has('loop')) return;
+    const st = document.getElementById('stage');
+    const dur = +(document.querySelector('meta[name=stinger]')?.content.split(/\s+/)[0] || 2000);
+    setInterval(() => { st.classList.remove('play'); void st.offsetWidth; st.classList.add('play'); }, dur + 1000);
+  };
+
   window.store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }

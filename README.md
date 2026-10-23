@@ -23,8 +23,18 @@ Desde ahí sumas bajas (K), lanzas el K.I.A. (M) y cambias el objetivo en direct
 
 ## Stinger (transición)
 
-OBS solo acepta vídeo para el Stinger: descarga [`render/stinger.webm`](render/stinger.webm) (con transparencia) y úsalo en **Transiciones → Stinger**, punto de transición **1000 ms**.
-Si cambias el diseño, vuelve a generarlo con `render/render-stinger.bat` (necesita Node, ffmpeg y Chrome).
+OBS solo acepta vídeo para el Stinger. Descarga el `.webm` (con transparencia) y úsalo en **Transiciones → + → Stinger**, con su punto de transición:
+
+| Vídeo | Estilo | Punto de transición |
+|---|---|---|
+| [`render/stinger.webm`](render/stinger.webm) | Barras diagonales con camuflaje y estrella | 1000 ms |
+| [`render/stinger-estrella.webm`](render/stinger-estrella.webm) | Estrella roja con rayos de cartel soviético | 1000 ms |
+| [`render/stinger-camo.webm`](render/stinger-camo.webm) | Bloques de camuflaje digital con escudo | 1000 ms |
+| [`render/stinger-blindaje.webm`](render/stinger-blindaje.webm) | Compuerta blindada con sello «ДОСТУП РАЗРЕШЁН» | 1050 ms |
+| [`render/stinger-mira.webm`](render/stinger-mira.webm) | Mira PSO-1 que se cierra a negro | 1000 ms |
+
+Todos tapan la pantalla por completo alrededor de su punto de transición, así el cambio de escena no se ve.
+Si cambias el diseño (o el nombre del canal en `js/config.js`), vuelve a generarlos con `render/render-stinger.bat` (necesita Node, ffmpeg y Chrome); también acepta un archivo concreto: `render-stinger.bat stinger-mira.html`.
 
 ## Personalizar
 
@@ -32,7 +42,7 @@ Edita [`js/config.js`](js/config.js): nombre del canal, lema, redes, color de ac
 
 | Archivo | Qué es |
 |---|---|
-| `stinger.html` | Transición con camuflaje digital y estrella roja |
+| `stinger*.html` | Transiciones (5 estilos); el `.webm` de cada una está en `render/` |
 | `intro.html` / `final.html` / `pausa.html` | Pantallas completas con foto de fondo |
 | `gc.html` | Rótulos: persona, ubicación, tema |
 | `mosca.html` | Logo de esquina con EN VIVO y reloj |
