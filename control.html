@@ -12,7 +12,8 @@
     Docks → Docks de navegador personalizados → Nombre: "Control Arma"
     URL: file:///C:/ruta/OBS_ArmaReforger/control.html
   Controla en directo bajas.html y objetivo.html (deben estar en la misma carpeta).
-  Atajos con el dock enfocado: K = baja · M = KIA · Z = deshacer baja
+  Controla también el modo alerta de marcos.html.
+  Atajos con el dock enfocado: K = baja · M = KIA · Z = deshacer baja · A = modo alerta
 -->
 <style>
   html, body { width: auto; height: auto; overflow: auto; }
@@ -81,6 +82,14 @@
   <div class="now" id="now"></div>
 </section>
 
+<section>
+  <h2><span>// MARCOS</span><span class="hint">A</span></h2>
+  <div class="row">
+    <button class="big" id="btn-alerta" data-a="1">⚠ MODO ALERTA</button>
+  </div>
+  <div class="now" id="alerta-now"></div>
+</section>
+
 <datalist id="objs">
   <option>Capturar Saint-Philippe</option><option>Capturar Montignac</option><option>Capturar Morton</option>
   <option>Capturar Levie</option><option>Capturar Chotain</option><option>Capturar Gravette</option>
@@ -117,20 +126,33 @@
     $('now').textContent = o ? `EN PANTALLA: ${o.estado === 'oculto' ? '—' : o.obj} [${o.estado}]` : '';
   }
 
+  // ---- Modo alerta de los marcos (marcos.html) ----
+  function alerta(on = !store.get('ar-alerta', false)) {
+    store.set('ar-alerta', on); bus.send({ t: 'alerta', on }); renderA();
+  }
+  function renderA() {
+    const on = store.get('ar-alerta', false);
+    $('btn-alerta').classList.toggle('kia', on);
+    $('btn-alerta').textContent = on ? '⚠ ALERTA ACTIVA — QUITAR' : '⚠ MODO ALERTA';
+    $('alerta-now').textContent = on ? 'Los marcos laten en rojo' : 'Marcos en modo normal';
+  }
+
   document.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.b) bajas(b.dataset.b);
     if (b.dataset.o) objetivo(b.dataset.o);
+    if (b.dataset.a) alerta();
   });
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') { if (e.key === 'Enter') objetivo('nuevo'); return; }
+    if (e.key.toLowerCase() === 'a') return alerta();
     const k = { k: 'kill', m: 'death', z: 'undo' }[e.key.toLowerCase()]; if (k) bajas(k);
   });
-  bus.on(m => { if (m.t === 'bajas') renderB(); if (m.t === 'obj') renderO(); });
+  bus.on(m => { if (m.t === 'bajas') renderB(); if (m.t === 'obj') renderO(); if (m.t === 'alerta') renderA(); });
 
   const o = store.get('ar-obj', null);
   if (o) { $('obj').value = o.obj || ''; $('sub').value = o.sub || ''; $('grid').value = o.grid || ''; $('letra').value = o.letra || ''; }
-  renderB(); renderO();
+  renderB(); renderO(); renderA();
 </script>
 </body>
 </html>

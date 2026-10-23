@@ -17,10 +17,15 @@
   ?estilo=camara   marco de webcam con borde que recorre el contorno
   ?estilo=camo     marco de webcam con borde de camuflaje digital
   ?estilo=chat     caja alta para el chat ("РАЦИЯ")
+  ?estilo=vertical marco 9:16 para cámara vertical o contenido para Shorts/TikTok
+  ?estilo=insignia marco de oficial: pasadores de condecoraciones, galón (pogon) y placa
+                   ?rango=СТ. СЕРЖАНТ  ?nombre=ВОЛКОВ А.В.  ?estrellas=3
+  ?estilo=mapa     el borde es una hoja de mapa topográfico con cuadrícula ?mapa=EVERON
+  ?estilo=cine     franjas de cine arriba y abajo con bajas, K/D y objetivo EN VIVO
 
-  ?x= ?y= ?w= ?h=  posición y tamaño del hueco (camara, camo, chat)
+  ?x= ?y= ?w= ?h=  posición y tamaño del hueco (todos menos juego y cine)
   ?label=TEXTO     texto de la pestaña
-  ?alerta=1        borde rojo latiendo todo el rato (momentos de tensión)
+  ?alerta=1        borde rojo latiendo todo el rato (también se activa desde control.html)
   ?eventos=0       no reaccionar a bajas ni objetivos
 -->
 <style>
@@ -105,6 +110,61 @@
   .corner b { color: var(--c); font-weight: 400; }
   .game .msg { font-size: 160px; }
 
+  /* ---- Estilo INSIGNIA: marco de oficial con galones, pasadores y placa ---- */
+  .fr.insig .edge { inset: -14px; border: 14px solid #1c2619; box-shadow: inset 0 0 0 2px var(--gold), 0 0 0 2px var(--gold), 0 8px 30px rgba(0,0,0,.6); }
+  .fr.insig .brackets { inset: -24px; }
+  .ribbons { position: absolute; left: 10px; top: 10px; display: grid; grid-template-columns: repeat(3, 34px); gap: 3px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+  .ribbons i { height: 11px; border: 1px solid rgba(0,0,0,.5); }
+  .plate { position: absolute; left: 50%; bottom: -46px; transform: translateX(-50%); display: flex; align-items: stretch; white-space: nowrap;
+    background: #10160f; border: 2px solid var(--gold); box-shadow: 0 6px 20px rgba(0,0,0,.6); }
+  .pogon { width: 92px; display: flex; align-items: center; justify-content: center; gap: 5px; position: relative;
+    background: var(--camo) 0 0 / 64px 64px, var(--olive); border-right: 2px solid var(--gold); }
+  .pogon::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 6px; margin-top: -3px; background: var(--acc); }
+  .pogon .star { position: relative; font-size: 18px; background: var(--gold); }
+  .plate .who { padding: 8px 20px 9px; }
+  .plate .rank { font-family: var(--f-mono); font-size: 14px; letter-spacing: .25em; color: var(--gold); }
+  .plate .nm { font-family: var(--f-head); font-size: 28px; line-height: 1.05; color: var(--txt); }
+  .fr.insig .tab { bottom: calc(100% + 24px); }
+  .fr.insig .foot { display: none; }
+
+  /* ---- Estilo MAPA: el borde es una hoja de mapa topográfico ---- */
+  .fr.mapa .edge { inset: -30px; border: 0; padding: 30px;
+    background:
+      repeating-radial-gradient(circle at 30% 40%, transparent 0 14px, rgba(120,90,40,.35) 14px 15px),
+      repeating-radial-gradient(circle at 80% 70%, transparent 0 18px, rgba(120,90,40,.3) 18px 19px),
+      linear-gradient(rgba(60,90,140,.25) 1px, transparent 1px) 0 0 / 60px 60px,
+      linear-gradient(90deg, rgba(60,90,140,.25) 1px, transparent 1px) 0 0 / 60px 60px,
+      #cfc6a3;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+    box-shadow: 0 8px 30px rgba(0,0,0,.6); }
+  .fr.mapa .edge::after { content: ''; position: absolute; inset: 29px; border: 2px solid #2b2a20; }
+  .ticks { position: absolute; display: flex; justify-content: space-around; font-family: var(--f-mono); font-size: 14px; color: #2b2a20; font-weight: 700; }
+  .ticks.top { left: 0; right: 0; top: -24px; } .ticks.bottom { left: 0; right: 0; bottom: -24px; }
+  .ticks.left { top: 0; bottom: 0; left: -26px; flex-direction: column; } .ticks.right { top: 0; bottom: 0; right: -26px; flex-direction: column; }
+  .sheet { position: absolute; left: -30px; top: -58px; background: #cfc6a3; color: #2b2a20; font-family: var(--f-mono); font-size: 15px; letter-spacing: .12em;
+    padding: 4px 12px; border: 2px solid #2b2a20; }
+  .scale { position: absolute; right: -30px; bottom: -58px; display: flex; align-items: center; gap: 10px; background: #cfc6a3; color: #2b2a20;
+    font-family: var(--f-mono); font-size: 14px; padding: 4px 12px; border: 2px solid #2b2a20; }
+  .scale i { width: 90px; height: 8px; border: 1px solid #2b2a20; background: linear-gradient(90deg, #2b2a20 0 25%, transparent 25% 50%, #2b2a20 50% 75%, transparent 75%); }
+  .pin { position: absolute; width: 18px; height: 18px; border-radius: 50% 50% 50% 0; background: var(--c); transform: rotate(-45deg); box-shadow: 0 2px 4px rgba(0,0,0,.5);
+    left: var(--px); top: var(--py); animation: pin 2.4s ease-in-out infinite; transition: background .3s; }
+  @keyframes pin { 50% { margin-top: -6px } }
+  .fr.mapa .tab, .fr.mapa .foot { display: none; }
+
+  /* ---- Estilo CINE: franjas de cine con datos en directo ---- */
+  .cine { position: absolute; inset: 0; }
+  .band { position: absolute; left: 0; right: 0; height: 92px; background: linear-gradient(#070a07, #0b100c); display: flex; align-items: center;
+    padding: 0 36px; gap: 30px; font-family: var(--f-mono); font-size: 18px; letter-spacing: .14em; color: var(--khaki); }
+  .band.t { top: 0; border-bottom: 3px solid var(--c); transition: border-color .3s; } .band.b { bottom: 0; border-top: 3px solid var(--c); transition: border-color .3s; }
+  .band::after { content: ''; position: absolute; left: 0; right: 0; height: 8px; background: var(--camo) 0 0 / 64px 64px; opacity: .8; }
+  .band.t::after { bottom: -11px; } .band.b::after { top: -11px; }
+  .band .grow { flex: 1; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .band b { color: var(--txt); font-weight: 400; } .band .hl { color: var(--c); transition: color .3s; }
+  .band .nm { font-family: var(--f-head); font-size: 26px; color: var(--txt); letter-spacing: .04em; }
+  .stat { display: flex; align-items: baseline; gap: 10px; } .stat b { font-size: 34px; color: var(--c); transition: color .3s; }
+  .cine .msg { font-size: 170px; }
+  .cine .tint { inset: 92px 0; }
+
   .in { opacity: 0; animation: fin .7s .1s cubic-bezier(.2,.8,.2,1) forwards; }
   @keyframes fin { from { opacity: 0; transform: scale(.97) } to { opacity: 1; transform: none } }
 </style>
@@ -115,8 +175,22 @@
   const estilo = P('estilo', 'juego');
   const root = document.getElementById('root');
   const trace = '<svg class="trace" preserveAspectRatio="none"><rect x="0" y="0" width="100%" height="100%" pathLength="100"/></svg>';
-  const LABELS = { camara: 'КАМЕРА // OPERADOR', camo: 'ОПЕРАТОР // CÁMARA', chat: 'РАЦИЯ // CHAT' };
-  const DEF = { camara: [1396, 690, 480, 270], camo: [1380, 680, 480, 270], chat: [1480, 170, 400, 520] };
+  const LABELS = { camara: 'КАМЕРА // OPERADOR', camo: 'ОПЕРАТОР // CÁMARA', chat: 'РАЦИЯ // CHAT', vertical: 'ВЕРТИКАЛЬ // SHORTS', insignia: 'ОФИЦЕР // CÁMARA', mapa: '' };
+  const DEF = { camara: [1396, 690, 480, 270], camo: [1380, 680, 480, 270], chat: [1480, 170, 400, 520], vertical: [1320, 70, 540, 960],
+    insignia: [1370, 640, 480, 270], mapa: [1360, 660, 480, 270] };
+  const CLASS = { camo: 'camof', insignia: 'insig', mapa: 'mapa' };
+  // Pasadores de condecoraciones (colores de cintas soviéticas)
+  const RIBBONS = ['#c8302a,#d6a93a', '#1f6b3a,#c8302a', '#d6a93a,#1f4f8a', '#c8302a,#fff', '#3a3a3a,#d6a93a', '#1f4f8a,#c8302a'];
+  const ribbon = (c) => { const [a, b] = c.split(','); return `<i style="background:linear-gradient(90deg,${a} 0 30%,${b} 30% 70%,${a} 70%)"></i>`; };
+
+  // Estadísticas en vivo (cine): bajas guardadas por bajas.html / control.html y el objetivo actual
+  function liveStats() {
+    const S = store.get('ar-bajas', { k: 0, d: 0 });
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    set('st_k', S.k); set('st_d', S.d); set('st_kd', (S.d ? S.k / S.d : S.k).toFixed(2));
+    const o = store.get('ar-obj', null);
+    set('st_obj', o && o.estado === 'nuevo' ? `ЗАДАЧА: ${String(o.obj).toUpperCase()}` : '— ЗАДАЧА НЕ НАЗНАЧЕНА —');
+  }
 
   let fr, label;
   if (estilo === 'juego') {
@@ -134,14 +208,37 @@
     for (let d = -180; d <= 540; d += 15) { const v = (d + 360) % 360; marks.push(`<span class="${v % 90 === 0 ? 'n' : ''}">${({ 0: 'С', 90: 'В', 180: 'Ю', 270: 'З' })[v] ?? v}</span>`); }
     strip.innerHTML = marks.join('');
     window.setHeading = (deg) => { strip.style.transform = `translateX(${260 - 26 - ((deg + 180) / 15) * 52}px)`; document.getElementById('az').textContent = String(Math.round(deg)).padStart(3, '0') + '°'; };
+  } else if (estilo === 'cine') {
+    root.innerHTML = `<div class="cine fr in" id="fr"><div class="tint"></div>
+        <div class="band t"><i class="star"></i><span class="nm" data-cfg="canal"></span><span class="grow" id="lbl">${P('label', 'ОПЕРАЦИЯ // EN DIRECTO')}</span>
+          <span>КВАДРАТ <b id="grid">047-112</b></span><span class="hl ck"></span></div>
+        <div class="band b"><span class="stat">УБИТО <b id="st_k">0</b></span><span class="stat">ПОТЕРИ <b id="st_d">0</b></span><span class="stat">K/D <b id="st_kd">0.00</b></span>
+          <span class="grow hl" id="st_obj"></span><span>АЗИМУТ <b id="az">274°</b></span><span>СВЯЗЬ <b id="sig">▮▮▮▮▯</b></span></div>
+        <div class="msg" id="msg"></div></div>`;
+    window.setHeading = (deg) => { document.getElementById('az').textContent = String(Math.round(deg)).padStart(3, '0') + '°'; };
+    liveStats();
   } else {
     const [dx, dy, dw, dh] = DEF[estilo] || DEF.camara;
     const x = PN('x', dx), y = PN('y', dy), w = PN('w', dw), h = PN('h', dh);
     const camo = estilo === 'camo';
-    root.innerHTML = `<div class="fr in ${camo ? 'camof' : ''}" id="fr" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">
-        <div class="edge"></div>${camo ? '' : trace}<div class="brackets"><i></i></div><div class="tint"></div>
-        ${estilo === 'chat' ? '' : '<div class="scan"></div>'}
+    const traced = ['camara', 'vertical', 'chat'].includes(estilo) || !DEF[estilo];
+    const extra = {
+      insignia: () => `<div class="ribbons">${RIBBONS.map(ribbon).join('')}</div>
+        <div class="plate"><div class="pogon">${'<i class="star"></i>'.repeat(Math.max(1, Math.min(4, PN('estrellas', 3))))}</div>
+          <div class="who"><div class="rank">${P('rango', 'СТ. СЕРЖАНТ')}</div><div class="nm">${P('nombre', 'ВОЛКОВ А.В.')}</div></div></div>`,
+      mapa: () => `<div class="ticks top">${[...'АБВГДЕЖЗИК'].map((l) => `<span>${l}</span>`).join('')}</div>
+        <div class="ticks bottom">${[...'АБВГДЕЖЗИК'].map((l) => `<span>${l}</span>`).join('')}</div>
+        <div class="ticks left">${[1, 2, 3, 4, 5, 6].map((n) => `<span>0${n}</span>`).join('')}</div>
+        <div class="ticks right">${[1, 2, 3, 4, 5, 6].map((n) => `<span>0${n}</span>`).join('')}</div>
+        <div class="sheet">ЛИСТ М-37-125 · ${String(P('mapa', 'EVERON')).toUpperCase()}</div>
+        <div class="scale"><i></i>1:50 000</div>
+        <i class="pin" style="--px:68%;--py:-27px"></i>`,
+    }[estilo];
+    root.innerHTML = `<div class="fr in ${CLASS[estilo] || ''}" id="fr" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">
+        <div class="edge"></div>${traced ? trace : ''}<div class="brackets"><i></i></div><div class="tint"></div>
+        ${['chat', 'mapa'].includes(estilo) ? '' : '<div class="scan"></div>'}
         ${camo ? ['-30px;left:-30px', '-30px;right:-30px', 'auto;bottom:-30px;left:-30px', 'auto;bottom:-30px;right:-30px'].map((p) => `<i class="star-c" style="top:${p}"></i>`).join('') : ''}
+        ${extra ? extra() : ''}
         <div class="tab"><b><i class="dot"></i>${estilo === 'chat' ? 'ЭФИР' : 'REC'}</b><span id="lbl">${P('label', LABELS[estilo] || LABELS.camara)}</span></div>
         <div class="foot"><span>КВАДРАТ <i id="grid">047-112</i></span><span>АЗИМУТ <i id="az">274°</i></span><span><i class="ck"></i></span></div>
         <div class="msg" id="msg"></div></div>`;
@@ -150,7 +247,9 @@
   fr = document.getElementById('fr');
   label = document.getElementById('lbl');
   const baseLabel = label.textContent;
-  if (P('alerta', '0') === '1') fr.classList.add('alert');
+  // Modo alerta: por URL (?alerta=1) o desde el panel de control (se recuerda)
+  const urlAlert = P('alerta', '0') === '1';
+  fr.classList.toggle('alert', urlAlert || store.get('ar-alerta', false));
 
   // Telemetría que se mueve sola: reloj, rumbo, cuadrícula y señal
   const ck = () => document.querySelectorAll('.ck').forEach((e) => (e.textContent = clockStr()));
@@ -180,6 +279,8 @@
   };
   if (P('eventos', '1') !== '0') {
     bus.on((m) => {
+      if (m.t === 'bajas' || m.t === 'obj') liveStats();
+      if (m.t === 'alerta') fr.classList.toggle('alert', urlAlert || !!m.on);
       if (m.t === 'bajas' && m.ev === 'kill') flash('gold', m.r > 1 ? `+1 ×${m.r}` : '+1', 1400);
       if (m.t === 'bajas' && m.ev === 'death') flash('kia', 'УБИТ', 3200);
       if (m.t === 'obj') {
