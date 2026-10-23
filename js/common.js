@@ -3,8 +3,19 @@
   const Q = new URLSearchParams(location.search);
   const CFG = window.CFG || {};
 
-  // Lee parámetro de URL, si no existe usa config.js, si no el valor por defecto
-  window.P = (k, d) => (Q.has(k) ? Q.get(k) : (CFG[k] !== undefined ? CFG[k] : d));
+  // Textos guardados desde el panel editor.html: { general: {...}, gc: {...}, intro: {...} }
+  // (cada gráfica lee los de su página y los generales).
+  const PAGE = (location.pathname.split('/').pop() || 'index').replace(/\.html?$/i, '');
+  let textos = {};
+  try { textos = JSON.parse(localStorage.getItem('ar-textos')) || {}; } catch (e) {}
+
+  // Orden de prioridad: parámetro de la URL › panel editor (esta página › general) › config.js › valor por defecto
+  window.P = (k, d) => {
+    if (Q.has(k)) return Q.get(k);
+    const ed = textos[PAGE]?.[k] ?? textos.general?.[k];
+    if (ed !== undefined && ed !== '') return ed;
+    return CFG[k] !== undefined ? CFG[k] : d;
+  };
   window.PN = (k, d) => { const v = parseFloat(P(k, d)); return isNaN(v) ? d : v; };
   window.PL = (k, d) => { const v = P(k, d); return Array.isArray(v) ? v : String(v).split('|').filter(Boolean); };
 
@@ -55,6 +66,12 @@
     send(msg) { try { localStorage.setItem('ar-bus', JSON.stringify({ ...msg, ts: Date.now() + Math.random() })); } catch (e) {} },
     on(fn) { addEventListener('storage', e => { if (e.key === 'ar-bus' && e.newValue) { try { fn(JSON.parse(e.newValue)); } catch (er) {} } }); }
   };
+
+  // Al aplicar textos en editor.html, las gráficas afectadas se recargan con el texto nuevo
+  // (y así repiten su animación de entrada). Los paneles (<html data-panel>) no se recargan.
+  window.bus.on(m => {
+    if (m.t === 'textos' && !document.documentElement.hasAttribute('data-panel') && (m.page === PAGE || m.page === 'general')) location.reload();
+  });
   // Stingers: con ?loop=1 repiten su animación (clase .play en #stage) para previsualizarlos.
   window.stingerLoop = () => {
     if (!Q.has('loop')) return;

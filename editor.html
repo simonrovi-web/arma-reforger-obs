@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es" data-panel>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor de textos</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<!--
+  EDITOR DE TEXTOS — panel para cambiar los textos de las gráficas sin tocar código.
+  Úsalo como dock en OBS: Docks → Docks de navegador personalizados → URL de este archivo.
+  Al pulsar "Aplicar", las gráficas de esa sección que estén abiertas se recargan con el texto nuevo.
+
+  IMPORTANTE: abre este panel desde el mismo sitio que las fuentes (todo desde la web de
+  GitHub Pages, o todo desde los archivos del disco); si no, no se ven entre sí.
+  Prioridad de los textos: lo que pongas en la URL de una fuente › este editor › js/config.js
+-->
+<style>
+  html, body { width: auto; height: auto; overflow: auto; }
+  body { background: var(--bg); padding: 14px; font-size: 16px; min-width: 280px; }
+  h1 { font-family: var(--f-head); font-weight: 400; font-size: 22px; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .tip { font-family: var(--f-mono); font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+  details { border: 1px solid var(--line); background: var(--bg2); margin-bottom: 10px; }
+  details[open] { border-color: rgba(200,48,42,.55); }
+  summary { cursor: pointer; padding: 10px 12px; font-family: var(--f-mono); font-size: 13px; letter-spacing: .2em; color: var(--acc); list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: '▸ '; } details[open] summary::before { content: '▾ '; }
+  summary span { flex: 1; } summary em { font-style: normal; color: var(--gold); letter-spacing: .05em; }
+  .body { padding: 0 12px 12px; }
+  label { display: block; font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; color: var(--muted); margin: 9px 0 3px; text-transform: uppercase; }
+  input, textarea, select { width: 100%; font: 600 16px var(--f-body); padding: 7px 9px; background: var(--bg); color: var(--txt); border: 1px solid var(--line); }
+  textarea { min-height: 74px; resize: vertical; font-weight: 500; line-height: 1.35; }
+  input[type=color] { height: 38px; padding: 2px; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--acc); outline-offset: -1px; }
+  ::placeholder { color: #5f6857; }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 6px; margin-top: 12px; }
+  button { font: 700 14px var(--f-body); letter-spacing: .04em; padding: 9px 8px; border: 1px solid var(--line); background: var(--olive); color: var(--txt); cursor: pointer; }
+  button:hover { filter: brightness(1.25); }
+  button.apply { background: var(--acc); border-color: var(--acc); color: var(--on-acc); }
+  button.ghost { background: none; color: var(--muted); }
+  a.open { font-family: var(--f-mono); font-size: 12px; color: var(--khaki); text-decoration: none; }
+  #status { position: sticky; bottom: 0; margin: 12px -14px -14px; padding: 8px 14px; background: #070a07; border-top: 1px solid var(--line);
+    font-family: var(--f-mono); font-size: 12px; color: var(--khaki); min-height: 32px; }
+</style>
+</head>
+<body>
+<h1><i class="star"></i> Editor de textos</h1>
+<div class="tip">Cambia los textos y pulsa <b>Aplicar</b>: las gráficas abiertas se actualizan solas. Vacío = el texto de <code>config.js</code>.</div>
+<div id="sections"></div>
+<details>
+  <summary><span>// COPIAR A OTRO PC</span></summary>
+  <div class="body">
+    <div class="tip" style="margin:8px 0 0">Los textos se guardan en este PC. Para llevarlos a otro equipo: <b>Exportar</b> aquí e <b>Importar</b> allí.</div>
+    <div class="row">
+      <button type="button" id="btn-export">Exportar</button>
+      <button type="button" id="btn-import">Importar</button>
+      <button type="button" class="ghost" id="btn-clear">Borrar todo</button>
+    </div>
+  </div>
+</details>
+<div id="status">Listo.</div>
+
+<script>
+  // [clave, etiqueta, tipo ('text' | 'list' | 'number' | 'color' | select {valor: texto}), ejemplo]
+  const SECTIONS = [
+    { page: 'general', title: 'GENERAL', note: 'todas', open: true, fields: [
+      ['canal', 'Nombre del canal'], ['lema', 'Lema'], ['lemaRu', 'Lema en cirílico'],
+      ['servidor', 'Servidor'], ['mapa', 'Mapa'], ['modo', 'Modo de juego'], ['faccion', 'Facción'],
+      ['redes', 'Redes sociales (una por línea)', 'list'], ['ticker', 'Mensajes del ticker / SITREP (uno por línea)', 'list'],
+      ['acento', 'Color de acento', 'color']] },
+    { page: 'gc', title: 'GC / RÓTULOS', replay: true, fields: [
+      ['tipo', 'Tipo de rótulo', { persona: 'Persona (nombre y cargo)', ubicacion: 'Ubicación (estilo película)', tema: 'Tema (barra centrada)' }],
+      ['nombre', 'Nombre', 'text', 'ST. SGT. VOLKOV'], ['cargo', 'Cargo', 'text', 'КОМАНДИР ОТДЕЛЕНИЯ // JEFE DE ESCUADRA'], ['tag', 'Callsign', 'text', 'БЕРКУТ-1'],
+      ['lugar', 'Lugar (ubicación)', 'text', 'MONTIGNAC, EVERON'], ['grid', 'Cuadrícula', 'text', '047-112'],
+      ['etiqueta', 'Etiqueta (tema)', 'text', 'СЕЙЧАС'], ['titulo', 'Título (tema)', 'text', 'Asalto a la base de Saint-Philippe'], ['sub', 'Subtítulo (tema)', 'text', 'CONFLICT // USSR vs US'],
+      ['dur', 'Segundos en pantalla (0 = fijo)', 'number', '8']] },
+    { page: 'intro', title: 'INTRO', replay: true, fields: [
+      ['titulo', 'Titular', 'text', 'Empezamos en breve'], ['operacion', 'Nombre de la operación', 'text', 'TORMENTA DE ACERO'], ['min', 'Minutos de cuenta atrás', 'number', '5']] },
+    { page: 'pausa', title: 'PAUSA', fields: [
+      ['titulo', 'Titular', 'text', 'Pausa táctica'], ['motivo', 'Mensaje', 'text', 'Reabasteciendo munición — vuelvo enseguida']] },
+    { page: 'final', title: 'FINAL', replay: true, fields: [
+      ['titulo', 'Titular', 'text', 'Misión cumplida'], ['proximo', 'Próxima transmisión', 'text', 'VIERNES 21:00'],
+      ['bajas', 'Bajas', 'number', ''], ['objetivos', 'Objetivos', 'number', ''], ['tiempo', 'Tiempo en servicio', 'text', '3h 12m'],
+      ['creditos', 'Créditos (uno por línea)', 'list', 'Escuadra Alfa\nEscuadra Bravo']] },
+    { page: 'alerta', title: 'ALERTA', replay: true, fields: [
+      ['tipo', 'Tipo', { sub: 'Suscripción', follow: 'Nuevo seguidor', donacion: 'Donación', raid: 'Raid' }],
+      ['user', 'Usuario', 'text', 'TOVARISCH_IVAN'], ['monto', 'Cantidad (donación / raid)', 'text', '5€'], ['dur', 'Segundos en pantalla', 'number', '6']] },
+    { page: 'ticker', title: 'TICKER', fields: [
+      ['msg', 'Mensajes solo de este ticker (vacío = los de General)', 'list'], ['vel', 'Segundos por vuelta', 'number', '40']] },
+    { page: 'escuadra', title: 'ESCUADRA', fields: [
+      ['escuadra', 'Nombre de la escuadra', 'text', 'БЕРКУТ'],
+      ['m', 'Miembros: Nombre:ROL:estado (uno por línea)', 'list', 'Volkov:КО:ok\nPetrov:САН:ok\nIvanov:СТР:herido']] },
+    { page: 'marcador', title: 'MARCADOR', fields: [
+      ['a', 'Bando A (izquierda)', 'text', 'USSR'], ['b', 'Bando B (derecha)', 'text', 'US'],
+      ['nombres', 'Nombres de las bases (uno por línea)', 'list', 'A\nB\nC\nD\nE'], ['tiempo', 'Minutos de ronda', 'number', '45'], ['max', 'Puntos para ganar', 'number', '1000']] },
+    { page: 'marcos', title: 'MARCOS', replay: true, fields: [
+      ['label', 'Texto de la pestaña', 'text', 'КАМЕРА // OPERADOR'], ['rango', 'Rango (marco de oficial)', 'text', 'СТ. СЕРЖАНТ'],
+      ['nombre', 'Nombre (marco de oficial)', 'text', 'ВОЛКОВ А.В.'], ['estrellas', 'Estrellas del galón (1–4)', 'number', '3']] },
+  ];
+
+  const KEY = 'ar-textos';
+  const all = () => store.get(KEY, {});
+  const status = (t) => { document.getElementById('status').textContent = `${clockStr()} · ${t}`; };
+  const fromCfg = (k) => { const v = CFG[k]; return Array.isArray(v) ? v.join('\n') : v ?? ''; };
+
+  function field([k, label, type = 'text', example = ''], page) {
+    const id = `${page}-${k}`;
+    const ph = page === 'general' ? fromCfg(k) : example;
+    let input;
+    if (typeof type === 'object') {
+      input = `<select id="${id}"><option value="">— por defecto —</option>${Object.entries(type).map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>`;
+    } else if (type === 'list') {
+      input = `<textarea id="${id}" placeholder="${ph.replace(/"/g, '&quot;')}"></textarea>`;
+    } else {
+      input = `<input id="${id}" type="${type === 'number' ? 'number' : type === 'color' ? 'color' : 'text'}" placeholder="${String(ph).replace(/"/g, '&quot;')}">`;
+    }
+    return `<label for="${id}">${label}</label>${input}`;
+  }
+
+  document.getElementById('sections').innerHTML = SECTIONS.map((s) => `
+    <details ${s.open ? 'open' : ''} data-page="${s.page}">
+      <summary><span>// ${s.title}</span><em id="n-${s.page}"></em></summary>
+      <div class="body">
+        ${s.fields.map((f) => field(f, s.page)).join('')}
+        <div class="row">
+          <button type="button" class="apply" data-act="apply">Aplicar</button>
+          ${s.replay ? '<button type="button" data-act="replay">▶ Repetir animación</button>' : ''}
+          <button type="button" class="ghost" data-act="reset">Restablecer</button>
+        </div>
+        ${s.page === 'general' ? '' : `<div style="margin-top:8px"><a class="open" href="${s.page}.html" target="_blank">Abrir ${s.page}.html ↗</a></div>`}
+      </div>
+    </details>`).join('');
+
+  // Rellena los campos con lo guardado
+  function load() {
+    const data = all();
+    for (const s of SECTIONS) {
+      const saved = data[s.page] || {};
+      let n = 0;
+      for (const [k, , type] of s.fields) {
+        const el = document.getElementById(`${s.page}-${k}`);
+        const v = saved[k];
+        if (type === 'color') el.value = '#' + String(v || CFG.acento || 'c8302a').replace('#', '');
+        else el.value = type === 'list' && v ? String(v).split('|').join('\n') : v ?? '';
+        if (v !== undefined && v !== '') n++;
+      }
+      document.getElementById(`n-${s.page}`).textContent = n ? `${n} editado${n > 1 ? 's' : ''}` : '';
+    }
+  }
+
+  function read(s) {
+    const out = {};
+    for (const [k, , type] of s.fields) {
+      const el = document.getElementById(`${s.page}-${k}`);
+      let v = el.value.trim();
+      if (type === 'list') v = v.split(/\r?\n/).map((x) => x.trim()).filter(Boolean).join('|');
+      if (type === 'color') { v = v.replace('#', ''); if (v.toLowerCase() === String(CFG.acento || '').toLowerCase()) v = ''; }
+      if (v !== '') out[k] = v;
+    }
+    return out;
+  }
+
+  document.getElementById('sections').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const page = b.closest('details').dataset.page;
+    const s = SECTIONS.find((x) => x.page === page);
+    const data = all();
+    if (b.dataset.act === 'apply') { data[page] = read(s); store.set(KEY, data); bus.send({ t: 'textos', page }); load(); status(`Aplicado: ${s.title}`); }
+    if (b.dataset.act === 'replay') { bus.send({ t: 'textos', page }); status(`Repitiendo animación: ${s.title}`); }
+    if (b.dataset.act === 'reset') {
+      if (!confirm(`¿Volver a los textos originales de ${s.title}?`)) return;
+      delete data[page]; store.set(KEY, data); bus.send({ t: 'textos', page }); load(); status(`Restablecido: ${s.title}`);
+    }
+  });
+
+  document.getElementById('btn-export').onclick = async () => {
+    const json = JSON.stringify(all());
+    try { await navigator.clipboard.writeText(json); status('Textos copiados al portapapeles. Pégalos en Importar del otro PC.'); }
+    catch (e) { prompt('Copia este texto:', json); }
+  };
+  document.getElementById('btn-import').onclick = () => {
+    const txt = prompt('Pega aquí los textos exportados:'); if (!txt) return;
+    try {
+      const data = JSON.parse(txt); if (typeof data !== 'object' || Array.isArray(data)) throw new Error();
+      store.set(KEY, data); bus.send({ t: 'textos', page: 'general' }); load(); status('Textos importados y aplicados.');
+    } catch (e) { status('Eso no son textos exportados de este editor.'); }
+  };
+  document.getElementById('btn-clear').onclick = () => {
+    if (!confirm('¿Borrar todos los textos editados y volver a config.js?')) return;
+    store.set(KEY, {}); bus.send({ t: 'textos', page: 'general' }); load(); status('Todo restablecido.');
+  };
+
+  load();
+</script>
+</body>
+</html>

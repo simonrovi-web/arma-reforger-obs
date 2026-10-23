@@ -21,6 +21,16 @@ https://simonrovi-web.github.io/arma-reforger-obs/gc.html?nombre=ST.%20SGT.%20VO
 En OBS: **Docks → Docks de navegador personalizados** → URL `https://simonrovi-web.github.io/arma-reforger-obs/control.html`.
 Desde ahí sumas bajas (K), lanzas el K.I.A. (M), cambias el objetivo y activas el modo alerta de los marcos (A) en directo.
 
+## Editar los textos (panel editor)
+
+En OBS: **Docks → Docks de navegador personalizados** → URL `https://simonrovi-web.github.io/arma-reforger-obs/editor.html`.
+Tiene una sección por gráfica (General, GC, Intro, Pausa, Final, Alerta, Ticker, Escuadra, Marcador, Marcos): escribe y pulsa **Aplicar**, y las gráficas abiertas se recargan con el texto nuevo. **▶ Repetir animación** vuelve a lanzar un GC o una alerta.
+
+- Abre el editor desde el **mismo sitio** que las fuentes (todo desde la web, o todo desde los archivos del disco); si no, no se ven entre sí.
+- Los textos se guardan en cada PC. Para pasarlos a otro: **Exportar** en uno e **Importar** en el otro.
+- Prioridad: lo que pongas en la URL de una fuente › el editor › `js/config.js`.
+- Los stingers son vídeos: para cambiar su texto hay que editar `js/config.js` y volver a renderizarlos.
+
 ## Stinger (transición)
 
 OBS solo acepta vídeo para el Stinger. Descarga el `.webm` (con transparencia) y úsalo en **Transiciones → + → Stinger**, con su punto de transición:

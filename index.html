@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-panel>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -50,7 +50,7 @@
     <li>Marca <b>"Actualizar navegador cuando la escena se active"</b> en GC, alerta, intro y final para que se animen cada vez.</li>
     <li><b>Stinger:</b> OBS solo acepta vídeo. <a href="render/stinger.webm" download style="color:var(--acc)">Descarga stinger.webm</a> (con transparencia; para regenerarlo: <code>render\render-stinger.bat</code>). En OBS: Transiciones → + → Stinger → ese archivo, <b>Punto de transición 1000 ms</b>.</li>
     <li><b>Marcador y escuadra</b> se controlan en directo: clic derecho en la fuente → <b>Interactuar</b> y haz clic en bases, puntos o soldados.</li>
-    <li><b>Bajas y objetivos:</b> añade <code>control.html</code> como dock: <b>Docks → Docks de navegador personalizados</b>, URL <code>file:///C:/ruta/OBS_ArmaReforger/control.html</code>. Desde ahí sumas bajas, lanzas el K.I.A. y cambias el objetivo sin tocar las fuentes. <a href="control.html" target="_blank" style="color:var(--acc)">Abrir panel</a></li>
+    <li><b>Bajas y objetivos:</b> añade <code>control.html</code> como dock: <b>Docks → Docks de navegador personalizados</b>, URL <code>file:///C:/ruta/OBS_ArmaReforger/control.html</code>. Desde ahí sumas bajas, lanzas el K.I.A. y cambias el objetivo sin tocar las fuentes. Añade también <code>editor.html</code> como dock para cambiar los textos de las gráficas. <a href="control.html" target="_blank" style="color:var(--acc)">Abrir panel</a></li>
     <li><b>PiP:</b> coloca tu webcam debajo del marco y ajústala al hueco (por defecto x1380 y700, 480×300).</li>
   </ol>
 </div>
@@ -84,6 +84,7 @@
     ['g2', 'escuadra.html', 'Escuadra', 'Roster con roles y estado. Interactivo.', 'escuadra.html'],
     ['g2', 'alerta.html', 'Alerta', 'Follow / sub / donación / raid.', 'alerta.html?tipo=sub&user=SOLDADO_RYAN&dur=999'],
     ['g2', 'ticker.html', 'Ticker SITREP', 'Faldón inferior con mensajes.', 'ticker.html'],
+    ['g2', 'editor.html', 'Editor de textos (panel)', 'Formularios para cambiar los textos de todas las gráficas en directo. Úsalo como dock en OBS.', 'editor.html'],
     ['g2', 'bajas.html', 'Contador de bajas', 'Bajas, muertes, K/D, rachas y pantalla K.I.A. Se controla desde control.html.', 'bajas.html'],
     ['g2', 'objetivo.html', 'Objetivo', 'Pop-up de nuevo objetivo / cumplido / fallido que se queda en la esquina.', 'objetivo.html?obj=Capturar Saint-Philippe&sub=Base de suministros&grid=047-112&letra=B&dur=999'],
   ];
