@@ -3,11 +3,26 @@
   const Q = new URLSearchParams(location.search);
   const CFG = window.CFG || {};
 
+  // Cada paquete guarda sus datos aparte: las webs de GitHub Pages comparten dominio
+  // (simonrovi-web.github.io), así que las claves llevan el nombre del proyecto
+  // (la carpeta de la web, o la carpeta del disco con file://).
+  const seg = location.protocol === 'file:'
+    ? decodeURIComponent(location.pathname).split('/').slice(-2, -1)[0]
+    : location.pathname.split('/').filter(Boolean)[0];
+  const PROJECT = seg && !seg.includes('.') ? seg : 'obs';
+  const K = window.K = (k) => `${PROJECT}:${k}`;
+  // Los datos guardados antes de separar los proyectos se copian una vez
+  try {
+    for (const k of ['ar-textos', 'ar-bajas', 'ar-obj', 'ar-alerta', 'ar-marcador']) {
+      if (localStorage.getItem(K(k)) === null && localStorage.getItem(k) !== null) localStorage.setItem(K(k), localStorage.getItem(k));
+    }
+  } catch (e) {}
+
   // Textos guardados desde el panel editor.html: { general: {...}, gc: {...}, intro: {...} }
   // (cada gráfica lee los de su página y los generales).
   const PAGE = (location.pathname.split('/').pop() || 'index').replace(/\.html?$/i, '');
   let textos = {};
-  try { textos = JSON.parse(localStorage.getItem('ar-textos')) || {}; } catch (e) {}
+  try { textos = JSON.parse(localStorage.getItem(K('ar-textos'))) || {}; } catch (e) {}
 
   // Orden de prioridad: parámetro de la URL › panel editor (esta página › general) › config.js › valor por defecto
   window.P = (k, d) => {
@@ -63,8 +78,8 @@
   // Canal de mensajes entre el panel de control (dock de OBS) y las fuentes.
   // Usa localStorage: el evento "storage" llega a las demás páginas del mismo origen.
   window.bus = {
-    send(msg) { try { localStorage.setItem('ar-bus', JSON.stringify({ ...msg, ts: Date.now() + Math.random() })); } catch (e) {} },
-    on(fn) { addEventListener('storage', e => { if (e.key === 'ar-bus' && e.newValue) { try { fn(JSON.parse(e.newValue)); } catch (er) {} } }); }
+    send(msg) { try { localStorage.setItem(K('ar-bus'), JSON.stringify({ ...msg, ts: Date.now() + Math.random() })); } catch (e) {} },
+    on(fn) { addEventListener('storage', e => { if (e.key === K('ar-bus') && e.newValue) { try { fn(JSON.parse(e.newValue)); } catch (er) {} } }); }
   };
 
   // Al aplicar textos en editor.html, las gráficas afectadas se recargan con el texto nuevo
@@ -81,7 +96,7 @@
   };
 
   window.store = {
-    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    get(k, d) { try { const v = localStorage.getItem(K(k)); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(K(k), JSON.stringify(v)); } catch (e) {} }
   };
 })();

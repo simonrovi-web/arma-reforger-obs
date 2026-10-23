@@ -40,6 +40,8 @@
   button.apply { background: var(--acc); border-color: var(--acc); color: var(--on-acc); }
   button.ghost { background: none; color: var(--muted); }
   a.open { font-family: var(--f-mono); font-size: 12px; color: var(--khaki); text-decoration: none; }
+  .warn { border: 1px solid var(--gold); background: rgba(214,169,58,.1); color: var(--txt); padding: 10px 12px; margin-bottom: 12px; font-size: 15px; line-height: 1.35; }
+  .warn b { color: var(--gold); }
   #status { position: sticky; bottom: 0; margin: 12px -14px -14px; padding: 8px 14px; background: #070a07; border-top: 1px solid var(--line);
     font-family: var(--f-mono); font-size: 12px; color: var(--khaki); min-height: 32px; }
 </style>
@@ -47,6 +49,11 @@
 <body>
 <h1><i class="star"></i> Editor de textos</h1>
 <div class="tip">Cambia los textos y pulsa <b>Aplicar</b>: las gráficas abiertas se actualizan solas. Vacío = el texto de <code>config.js</code>.</div>
+<div class="warn" id="warn" hidden>
+  <b>¿Has abierto el editor en Chrome u otro navegador?</b> Entonces «Aplicar» no llega a OBS (cada programa guarda sus textos aparte). Dos formas de que sí llegue:<br>
+  1) Añade este editor <b>dentro de OBS</b>: Docks → Docks de navegador personalizados → pega esta misma dirección.<br>
+  2) Escribe tus textos y pulsa <b>Copiar URL para OBS</b> en la sección: pega esa URL en la fuente de navegador de OBS.
+</div>
 <div id="sections"></div>
 <details>
   <summary><span>// COPIAR A OTRO PC</span></summary>
@@ -126,6 +133,7 @@
         <div class="row">
           <button type="button" class="apply" data-act="apply">Aplicar</button>
           ${s.replay ? '<button type="button" data-act="replay">▶ Repetir animación</button>' : ''}
+          ${s.page === 'general' ? '' : '<button type="button" data-act="url">Copiar URL para OBS</button>'}
           <button type="button" class="ghost" data-act="reset">Restablecer</button>
         </div>
         ${s.page === 'general' ? '' : `<div style="margin-top:8px"><a class="open" href="${s.page}.html" target="_blank">Abrir ${s.page}.html ↗</a></div>`}
@@ -167,12 +175,26 @@
     const s = SECTIONS.find((x) => x.page === page);
     const data = all();
     if (b.dataset.act === 'apply') { data[page] = read(s); store.set(KEY, data); bus.send({ t: 'textos', page }); load(); status(`Aplicado: ${s.title}`); }
+    if (b.dataset.act === 'url') return copyUrl(s);
     if (b.dataset.act === 'replay') { bus.send({ t: 'textos', page }); status(`Repitiendo animación: ${s.title}`); }
     if (b.dataset.act === 'reset') {
       if (!confirm(`¿Volver a los textos originales de ${s.title}?`)) return;
       delete data[page]; store.set(KEY, data); bus.send({ t: 'textos', page }); load(); status(`Restablecido: ${s.title}`);
     }
   });
+
+  // URL de la gráfica con los textos dentro (los de General y los de la sección, tal como están escritos).
+  // Funciona en cualquier PC y programa aunque el editor no esté en OBS; los textos de la URL mandan sobre el editor.
+  async function copyUrl(s) {
+    const gen = SECTIONS.find((x) => x.page === 'general');
+    const params = new URLSearchParams({ ...read(gen), ...read(s) }).toString();
+    const url = new URL(`${s.page}.html`, location.href).href + (params ? '?' + params : '');
+    try { await navigator.clipboard.writeText(url); status(`URL copiada (${s.title}): pégala en la fuente de navegador de OBS.`); }
+    catch (e) { prompt('Copia esta URL y pégala en la fuente de navegador de OBS:', url); }
+  }
+
+  // Dentro de OBS (fuente o dock) existe window.obsstudio; fuera, se avisa de cómo hacer llegar los cambios
+  if (!window.obsstudio) document.getElementById('warn').hidden = false;
 
   document.getElementById('btn-export').onclick = async () => {
     const json = JSON.stringify(all());

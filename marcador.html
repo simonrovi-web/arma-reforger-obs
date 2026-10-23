@@ -58,14 +58,14 @@
 </div>
 <script>
   const KEY = 'ar-marcador', MAX = PN('max', 1000);
-  let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+  let saved = {}; try { saved = JSON.parse(localStorage.getItem(K(KEY))) || {}; } catch (e) {}
   const fromUrl = /[?&](pa|pb|bases)=/.test(location.search);
   const S = {
     pa: fromUrl ? PN('pa', 0) : (saved.pa ?? 0),
     pb: fromUrl ? PN('pb', 0) : (saved.pb ?? 0),
     bases: (fromUrl ? P('bases', 'RRNUU') : (saved.bases || 'RRNUU')).toUpperCase().split('')
   };
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ ...S, bases: S.bases.join('') })); } catch (e) {} };
+  const save = () => { try { localStorage.setItem(K(KEY), JSON.stringify({ ...S, bases: S.bases.join('') })); } catch (e) {} };
   const names = PL('nombres', 'A|B|C|D|E|F|G|H');
   document.getElementById('na').textContent = P('a', 'USSR');
   document.getElementById('nb').textContent = P('b', 'US');
